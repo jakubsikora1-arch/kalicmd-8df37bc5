@@ -215,6 +215,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
         <aside className="tool-sidebar">
           <div className="sidebar-label"><Terminal size={14} /> PRACOVNÍ PROSTOR</div>
           <Button asChild variant="ghost" className="sidebar-tool"><Link to="/"><Terminal />Generátor příkazů</Link></Button>
+          <Button asChild variant="ghost" className="sidebar-tool"><Link to="/pentest"><ShieldCheck />PENTEST</Link></Button>
           <div className="sidebar-label mt-10">NÁSTROJE</div>
           {tools.map(t => <Button key={t.name} asChild variant="ghost" className="sidebar-tool"><Link to="/tools/$tool" params={{ tool: t.id }} aria-current={tool?.id === t.id ? "page" : undefined}><t.icon />{t.name}<ChevronRight className="ml-auto opacity-40" /></Link></Button>)}
           {!tool && <Button variant="ghost" className="sidebar-tool" onClick={() => choose("Napiš Bash příkaz pro vyhledání všech souborů větších než 100 MB v mém domovském adresáři.")}><Terminal />Bash / Linux<ChevronRight className="ml-auto opacity-40" /></Button>}

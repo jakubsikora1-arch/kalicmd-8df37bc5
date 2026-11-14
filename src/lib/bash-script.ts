@@ -12,7 +12,11 @@ export function extractBashScript(text: string): string | null {
 }
 
 export function downloadScript(script: string, filename: string = SCRIPT_FILENAME) {
-  const blob = new Blob([script], { type: "text/x-shellscript;charset=utf-8" });
+  downloadFile(script, filename, "text/x-shellscript;charset=utf-8");
+}
+
+export function downloadFile(content: string, filename: string, mime: string) {
+  const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

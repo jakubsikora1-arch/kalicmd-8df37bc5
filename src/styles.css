@@ -248,3 +248,22 @@
 .oauth-google { background: #131314; color: #e3e3e3; border: 1px solid #8e918f; }
 .oauth-apple { background: #ffffff; color: #000000; }
 @media (max-width: 639px) { .account-email, .header-caption, .model-badge { display: none; } }
+
+/* PENTEST page */
+.pentest-shell { min-height: 100dvh; background: var(--background); color: var(--foreground); }
+.pentest-header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .75rem max(1rem, env(safe-area-inset-left)); border-bottom: 1px solid var(--border); }
+.pentest-main { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1rem calc(2rem + env(safe-area-inset-bottom)); min-width: 0; }
+.pentest-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); padding: 1.25rem; min-width: 0; }
+.pentest-grid { display: grid; gap: 1rem; margin-top: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pentest-wide { grid-column: 1 / -1; }
+@media (max-width: 640px) { .pentest-grid { grid-template-columns: minmax(0, 1fr); } .pentest-progress .label { display: none; } .pentest-progress .current .label { display: inline; } }
+.pentest-select { height: 2.25rem; border: 1px solid var(--input); border-radius: calc(var(--radius) - 2px); background: var(--background); color: var(--foreground); padding: 0 .5rem; }
+.pentest-check { display: flex; align-items: flex-start; gap: .6rem; font-size: .875rem; min-height: 44px; }
+.pentest-progress { display: flex; gap: .5rem; flex-wrap: wrap; list-style: none; padding: 0; font-size: .8rem; }
+.pentest-progress li { display: flex; align-items: center; gap: .35rem; padding: .3rem .6rem; border: 1px solid var(--border); border-radius: 999px; color: var(--muted-foreground); }
+.pentest-progress li.current { border-color: var(--primary); color: var(--primary); }
+.pentest-progress li.done { color: var(--foreground); }
+.pentest-gate { display: flex; gap: .75rem; padding: .9rem; border: 1px solid var(--primary); border-radius: var(--radius); }
+.pentest-step { border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); padding: .8rem; display: grid; gap: .35rem; min-width: 0; }
+.pentest-cmd, .pentest-preview { background: var(--background); border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); padding: .6rem; font-family: var(--font-mono, monospace); font-size: .8rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+.pentest-preview { max-height: 24rem; overflow-y: auto; }

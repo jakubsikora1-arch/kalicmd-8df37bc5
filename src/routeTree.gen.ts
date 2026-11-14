@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as PentestRouteImport } from './routes/pentest'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiPentestRouteImport } from './routes/api/pentest'
 import { Route as ToolsToolRouteImport } from './routes/tools.$tool'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
@@ -26,6 +28,11 @@ const McpRoute = McpRouteImport.update({
   path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PentestRoute = PentestRouteImport.update({
+  id: '/pentest',
+  path: '/pentest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotwellKnownChar93OauthProtectedResourceRoute =
   Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
     id: '/.well-known/oauth-protected-resource',
@@ -35,6 +42,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPentestRoute = ApiPentestRouteImport.update({
+  id: '/api/pentest',
+  path: '/api/pentest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsToolRoute = ToolsToolRouteImport.update({
@@ -51,16 +63,20 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
+  '/pentest': typeof PentestRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/pentest': typeof ApiPentestRoute
   '/tools/$tool': typeof ToolsToolRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
+  '/pentest': typeof PentestRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/pentest': typeof ApiPentestRoute
   '/tools/$tool': typeof ToolsToolRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
@@ -68,8 +84,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/mcp': typeof McpRoute
+  '/pentest': typeof PentestRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/pentest': typeof ApiPentestRoute
   '/tools/$tool': typeof ToolsToolRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
@@ -78,24 +96,30 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/mcp'
+    | '/pentest'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/api/pentest'
     | '/tools/$tool'
     | '/.lovable/oauth/consent'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/mcp'
+    | '/pentest'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/api/pentest'
     | '/tools/$tool'
     | '/.lovable/oauth/consent'
   id:
     | '__root__'
     | '/'
     | '/mcp'
+    | '/pentest'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/api/pentest'
     | '/tools/$tool'
     | '/.lovable/oauth/consent'
   fileRoutesById: FileRoutesById
@@ -103,8 +127,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   McpRoute: typeof McpRoute
+  PentestRoute: typeof PentestRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiPentestRoute: typeof ApiPentestRoute
   ToolsToolRoute: typeof ToolsToolRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
@@ -125,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pentest': {
+      id: '/pentest'
+      path: '/pentest'
+      fullPath: '/pentest'
+      preLoaderRoute: typeof PentestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/.well-known/oauth-protected-resource': {
       id: '/.well-known/oauth-protected-resource'
       path: '/.well-known/oauth-protected-resource'
@@ -137,6 +170,13 @@ declare module '@tanstack/react-router' {
       path: '/api/chat'
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pentest': {
+      id: '/api/pentest'
+      path: '/api/pentest'
+      fullPath: '/api/pentest'
+      preLoaderRoute: typeof ApiPentestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/$tool': {
@@ -159,9 +199,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   McpRoute: McpRoute,
+  PentestRoute: PentestRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiPentestRoute: ApiPentestRoute,
   ToolsToolRoute: ToolsToolRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
