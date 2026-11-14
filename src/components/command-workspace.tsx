@@ -12,6 +12,7 @@ import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit 
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { catalogTitle, toolCatalog, toolPrefix, scopedInput, type Tool } from "@/lib/tool-catalog";
 import { ToolGuide } from "@/components/tool-guide";
+import { ParameterizedCommandGenerator } from "@/components/parameterized-command-generator";
 import logo from "@/assets/logo.png";
 import { ConfirmAction } from "@/components/confirm-action";
 import { ScriptDownload } from "@/components/script-download";
@@ -25,6 +26,7 @@ const tools = toolCatalog;
 
 export function CommandWorkspace({ tool }: { tool?: Tool }) {
   const [mode, setMode] = useState<GenerationMode>("command");
+  const [showParameters, setShowParameters] = useState(Boolean(tool));
   const [finishedScripts, setFinishedScripts] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState(toolPrefix(tool));
@@ -222,6 +224,9 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
             </section>
           )}
 
+          {tool && <div role="group" aria-label="Zobrazení nástroje" className="flex shrink-0 gap-2 border-b border-border px-4 py-2"><Button size="sm" variant={showParameters ? "secondary" : "ghost"} aria-pressed={showParameters} onClick={() => setShowParameters(true)}>Parametry</Button><Button size="sm" variant={!showParameters ? "secondary" : "ghost"} aria-pressed={!showParameters} onClick={() => setShowParameters(false)}>Přehled a AI{messages.length ? ` (${messages.length})` : ""}</Button></div>}
+          {tool && <div className={showParameters ? "welcome-scroll" : "hidden"}><div className="conversation-inner"><ParameterizedCommandGenerator initialTool={tool.id} /></div></div>}
+          <div className={showParameters ? "hidden" : "flex min-h-0 flex-1 flex-col"}>
           {messages.length === 0 ? (
             <div className="welcome-scroll"><div className="conversation-inner">
                 {tool ? <ToolGuide tool={tool} copied={copied} onCopy={(id, command) => { void copy(id, command); }} /> : <div className="welcome">
@@ -254,6 +259,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
             <ConversationScrollButton aria-label="Posunout na konec" />
           </Conversation>
           )}
+          </div>
 
           <div className="composer-area">
             <div role="group" aria-label="Režim generování" className="mb-3 flex w-fit gap-1 rounded-md border border-border bg-background p-1">
