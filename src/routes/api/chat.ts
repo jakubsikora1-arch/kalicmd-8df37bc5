@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { streamMessage, GatewayError } from "@lovable.dev/ai-gateway";
-import { KALI_SCRIPT_PROMPT, KALI_SYSTEM_PROMPT } from "@/lib/kali-prompt";
+import { buildKaliPrompt } from "@/lib/kali-prompt";
 import { parseChatRequest } from "@/lib/chat-request";
 
 export const Route = createFileRoute("/api/chat")({
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/chat")({
             {
               model: "anthropic/claude-sonnet-5",
               max_tokens: 2048,
-              system: data.mode === "script" ? KALI_SCRIPT_PROMPT : KALI_SYSTEM_PROMPT,
+              system: buildKaliPrompt(data.mode, data.tool),
               messages: data.messages,
             },
             { signal: request.signal },

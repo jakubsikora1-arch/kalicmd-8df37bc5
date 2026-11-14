@@ -37,3 +37,4 @@ use the editor.
 - Script mode uses the existing streaming endpoint; only completed shebang-prefixed Bash blocks become client-generated downloads, never automatic local execution.
 - Render the empty welcome outside the auto-scrolling conversation; reserve stick-to-bottom behavior for actual messages so mobile entry starts at the top.
 - Use the shared controlled confirmation dialog for irreversible actions; keep it open during deletion and on failure to prevent duplicate requests and preserve retry context.
+- Reuse CommandWorkspace across the main and dynamic tool routes, with catalog-validated tool IDs sent separately to the streaming endpoint; visible tool markers must not be the authority for AI scope.

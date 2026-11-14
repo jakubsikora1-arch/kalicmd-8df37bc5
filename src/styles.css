@@ -198,6 +198,9 @@
 .app-shell button, .confirmation-dialog button { min-height: 44px; }
 .app-shell button[aria-label], .confirmation-dialog button { min-width: 44px; }
 .app-shell .suggestion { height: auto; min-height: 112px; align-items: stretch; white-space: normal; }
+.suggestion-title { display: flex; align-items: center; gap: 4px; color: var(--primary); font-family: var(--font-mono); }
+.tool-guide { padding-block: 8px; }
+.tool-commands { list-style: none; margin: 0; padding: 0; }
 .suggestion > * { flex-shrink: 0; }
 .confirmation-dialog { background-color: var(--background); }
 .app-header { padding-top: env(safe-area-inset-top); height: calc(4rem + env(safe-area-inset-top)); padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
@@ -210,16 +213,16 @@
 .confirmation-dialog { width: calc(100% - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; border-radius: var(--radius); }
 .workspace-footer { font-size: 10px; }
 @media (max-width: 639px) {
-  .welcome { padding-block: 8px; }
+  .welcome { padding-block: 0; }
   .conversation-inner { padding-block: 12px; }
-  .welcome-mark, .eyebrow, .welcome-terminal { display: none; }
+  .welcome-mark, .eyebrow, .welcome-terminal, .welcome h1, .welcome-description { display: none; }
   .welcome h1 { font-size: 32px; }
   .welcome-description { margin-top: 8px; font-size: 16px; }
   .welcome-description br { display: none; }
-  .suggestions { margin-top: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .app-shell .suggestion { min-height: 96px; padding: 12px; gap: 6px; }
-  .suggestion-top span { display: none; }
-  .suggestion-title { font-size: 14px; }
+  .suggestions { margin-top: 0; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .app-shell .suggestion { min-height: 76px; padding: 12px 16px; gap: 8px; }
+  .suggestion-top span { display: inline; font-size: 11px; }
+  .suggestion-title { font-size: 16px; }
   .composer-language { font-size: 11px; }
   .composer-note { font-size: 11px; align-items: flex-start; }
   .composer-note svg { flex-shrink: 0; margin-top: 2px; }

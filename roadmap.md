@@ -10,3 +10,6 @@
 - [x] Add saved-script loading/retry, copy feedback and destructive confirmations.
 - [x] Translate fallback pages and verify actual generation/save/download flows and accessibility.
 - [x] Keep the composer collapsed to one line until clicked or typed into.
+- [x] Rename tool blocks and match the supplied layout.
+- [x] Add tool pages with basic information and five commands each.
+- [x] Scope AI requests to the selected tool and verify main/tool flows.
