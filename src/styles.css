@@ -240,3 +240,11 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+.account-chip { display: flex; align-items: center; gap: 0.375rem; min-width: 0; color: var(--muted-foreground); font-size: 0.8125rem; }
+.account-email { max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oauth-btn { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 0.5rem; font: 500 14px/20px system-ui, -apple-system, sans-serif; }
+.oauth-btn:disabled { opacity: 0.6; }
+.oauth-google { background: #131314; color: #e3e3e3; border: 1px solid #8e918f; }
+.oauth-apple { background: #ffffff; color: #000000; }
+@media (max-width: 639px) { .account-email, .header-caption, .model-badge { display: none; } }

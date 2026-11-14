@@ -17,7 +17,9 @@ import { ConfirmAction } from "@/components/confirm-action";
 import { ScriptDownload } from "@/components/script-download";
 import { downloadScript, extractBashScript } from "@/lib/bash-script";
 import type { GenerationMode } from "@/lib/chat-request";
-import { deleteSavedScript, listSavedScripts, recordUsage, saveSavedScript, type SavedScript } from "@/lib/saved-scripts";
+import { AccountButton } from "@/components/account-button";
+import { useAuth } from "@/hooks/use-auth";
+import { claimBrowserScripts, deleteSavedScript, listSavedScripts, recordUsage, saveSavedScript, type SavedScript } from "@/lib/saved-scripts";
 
 const tools = toolCatalog;
 
@@ -69,11 +71,19 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
       if (mounted.current) setSavedLoading(false);
     }
   }, []);
+  const { user, ready } = useAuth();
+  const userId = user?.id ?? null;
   useEffect(() => {
     mounted.current = true;
-    void loadSaved();
     return () => { mounted.current = false; };
-  }, [loadSaved]);
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+    void (async () => {
+      if (userId) { try { await claimBrowserScripts(); } catch { /* retried next sign-in */ } }
+      await loadSaved();
+    })();
+  }, [ready, userId, loadSaved]);
 
   function choose(text: string) {
     setInput(text);
@@ -177,7 +187,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
     <div className="app-shell">
       <header className="app-header">
         <Link to="/" className="brand" aria-label="KaliCmd – domů"><img src={logo} width={44} height={44} alt="" /><span>Kali<span className="text-primary">Cmd</span><span className="brand-cursor">_</span></span></Link>
-        <div className="header-right"><span className="header-caption">TVŮJ PARŤÁK V TERMINÁLU</span><span className="model-badge"><span className="status-dot" />Claude Sonnet 5</span></div>
+        <div className="header-right"><span className="header-caption">TVŮJ PARŤÁK V TERMINÁLU</span><span className="model-badge"><span className="status-dot" />Claude Sonnet 5</span><AccountButton user={user} ready={ready} /></div>
       </header>
 
       <div className="workspace">
@@ -260,7 +270,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
             </PromptInput>
             <div className="composer-note"><ShieldCheck size={12} /><span>Příkazy před spuštěním ověř. Pouze pro autorizované testování.</span></div>
           </div>
-          <footer className="workspace-footer"><span><span className="status-dot" /> BEZ PŘIHLÁŠENÍ · SKRIPTY ULOŽENÉ V TOMTO PROHLÍŽEČI</span><span className="footer-right"><EthernetPort size={12} /> KALI LINUX / GNU BASH</span></footer>
+          <footer className="workspace-footer"><span><span className="status-dot" /> {user ? "PŘIHLÁŠENO · SKRIPTY ULOŽENÉ V TVÉM ÚČTU" : "BEZ PŘIHLÁŠENÍ · SKRIPTY ULOŽENÉ V TOMTO PROHLÍŽEČI"}</span><span className="footer-right"><EthernetPort size={12} /> KALI LINUX / GNU BASH</span></footer>
         </main>
       </div>
       <div role="status" aria-live="polite" className="sr-only">{copied ? "Zkopírováno do schránky." : ""}</div>

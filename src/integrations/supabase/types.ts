@@ -21,6 +21,7 @@ export type Database = {
           script: string
           session_id: string
           title: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -28,6 +29,7 @@ export type Database = {
           script: string
           session_id: string
           title?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -35,6 +37,7 @@ export type Database = {
           script?: string
           session_id?: string
           title?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -64,6 +67,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      kalicmd_claim_scripts: { Args: { _session: string }; Returns: number }
       kalicmd_delete_script: {
         Args: { _id: string; _session: string }
         Returns: undefined

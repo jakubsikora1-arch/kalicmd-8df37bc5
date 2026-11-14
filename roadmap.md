@@ -17,3 +17,4 @@
 - [x] Verify all ten tools against Kali documentation and complete command/option meanings without changing the application design (user-installed binaries remain unverified).
 - [x] Add consented public MCP catalog tools and page-local WebMCP reads without exposing browser-private data.
 - [x] Verify MCP catalog extraction, anonymous calls for all ten details and existing desktop/mobile page flows (native WebMCP unavailable in test browser).
+- [x] Add Google/Apple sign-in and move saved scripts into owner-protected accounts.
