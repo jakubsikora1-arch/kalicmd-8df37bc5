@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
-import { ArrowUpRight, Check, ChevronRight, Copy, Crosshair, EthernetPort, Fingerprint, Network, RotateCcw, ShieldCheck, Terminal, Waves } from "lucide-react";
+import { ArrowUpRight, Check, ChevronRight, Copy, Crosshair, EthernetPort, FileCode2, Fingerprint, Network, RotateCcw, ShieldCheck, Terminal, Waves } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import logo from "@/assets/logo.png";
+import { ScriptDownload } from "@/components/script-download";
+import { extractBashScript } from "@/lib/bash-script";
+import type { GenerationMode } from "@/lib/chat-request";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -29,6 +32,8 @@ const tools = [
 ];
 
 function Index() {
+  const [mode, setMode] = useState<GenerationMode>("command");
+  const [finishedScripts, setFinishedScripts] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<"ready" | "submitted" | "streaming">("ready");
@@ -61,7 +66,7 @@ function Index() {
     try {
       const response = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history.map(m => ({ role: m.role, content: m.parts.flatMap(p => p.type === "text" ? [p.text] : []).join("\n") })) }),
+        body: JSON.stringify({ mode, messages: history.map(m => ({ role: m.role, content: m.parts.flatMap(p => p.type === "text" ? [p.text] : []).join("\n") })) }),
         signal: abort.signal,
       });
       if (!response.ok) throw new Error(await response.text() || "Odpověď se nepodařila. Zkuste to znovu.");
@@ -77,6 +82,11 @@ function Index() {
         setMessages([...history, result]);
       }
       if (!answer) throw new Error("Claude nevrátil žádný text. Zkuste požadavek upravit.");
+      if (mode === "script" && !abort.signal.aborted && !answer.includes("_[Odpověď byla přerušena.]_")) {
+        const script = extractBashScript(answer);
+        if (script) setFinishedScripts(previous => ({ ...previous, [id]: script }));
+        else setError("Odpověď neobsahuje kompletní Bash skript ke stažení. Požádej o kratší úplný skript.");
+      }
     } catch (err) {
       if (!abort.signal.aborted) { setError(err instanceof Error ? err.message : "Spojení s AI se nezdařilo."); setInput(text); }
     } finally {
@@ -109,7 +119,7 @@ function Index() {
         </aside>
 
         <main className="main-workspace">
-          <div className="workspace-bar"><div className="flex items-center gap-2"><span className="text-primary">~/</span> generátor <span className="text-muted-foreground">/ bash</span></div><Button variant="ghost" size="icon-sm" title="Vymazat konverzaci" aria-label="Vymazat konverzaci" disabled={busy || messages.length === 0} onClick={() => { setMessages([]); setError(""); setInput(""); textarea.current?.focus(); }}><RotateCcw /></Button></div>
+          <div className="workspace-bar"><div className="flex items-center gap-2"><span className="text-primary">~/</span> generátor <span className="text-muted-foreground">/ bash</span></div><Button variant="ghost" size="icon-sm" title="Vymazat konverzaci" aria-label="Vymazat konverzaci" disabled={busy || messages.length === 0} onClick={() => { setMessages([]); setFinishedScripts({}); setError(""); setInput(""); textarea.current?.focus(); }}><RotateCcw /></Button></div>
 
           <Conversation className="transcript">
             <ConversationContent className="conversation-inner">
@@ -124,23 +134,30 @@ function Index() {
                   </div>
                   <div className="welcome-terminal"><span className="text-primary">┌──(kali㉿kali)-[~]</span><br /><span className="text-primary">└─$ </span><span>připraven na další příkaz</span><span className="terminal-cursor" /></div>
                 </div>
-              ) : messages.map(message => (
+              ) : messages.map(message => {
+                const script = finishedScripts[message.id];
+                return (
                 <Message from={message.role} key={message.id}>
                   {message.role === "assistant" && <div className="assistant-label"><Terminal size={14} /> KALICMD <span>CLAUDE</span></div>}
                   <MessageContent>{message.parts.map((part, i) => part.type === "text" ? message.role === "assistant" ? <MessageResponse key={i}>{part.text}</MessageResponse> : <div key={i} className="whitespace-pre-wrap">{part.text}</div> : null)}</MessageContent>
                   {message.role === "assistant" && !busy && <div><Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => { const text = message.parts.flatMap(p => p.type === "text" ? [p.text] : []).join("\n"); const blocks = [...text.matchAll(/```(?:bash|sh|shell)?\n([\s\S]*?)```/g)]; void copy(message.id, blocks.length ? blocks.map(b => b[1]?.trim()).join("\n\n") : text); }}>{copied === message.id ? <Check /> : <Copy />}{copied === message.id ? "Zkopírováno" : "Kopírovat příkazy"}</Button></div>}
+                  {script && <ScriptDownload script={script} onCopy={text => { void copy(message.id, text); }} />}
                 </Message>
-              ))}
-              {status === "submitted" && <Shimmer>Claude připravuje příkaz…</Shimmer>}
+              ); })}
+              {status === "submitted" && <Shimmer>{mode === "script" ? "Claude připravuje skript…" : "Claude připravuje příkaz…"}</Shimmer>}
             </ConversationContent>
             <ConversationScrollButton aria-label="Posunout na konec" />
           </Conversation>
 
           <div className="composer-area">
+            <div role="group" aria-label="Režim generování" className="mb-3 flex w-fit gap-1 rounded-md border border-border bg-background p-1">
+              <Button size="sm" variant={mode === "command" ? "secondary" : "ghost"} aria-pressed={mode === "command"} disabled={busy} onClick={() => setMode("command")}><Terminal />Příkaz</Button>
+              <Button size="sm" variant={mode === "script" ? "secondary" : "ghost"} aria-pressed={mode === "script"} disabled={busy} onClick={() => setMode("script")}><FileCode2 />Skript .sh</Button>
+            </div>
             {error && <div role="alert" className="error-notice">{error}</div>}
             <PromptInput className="command-composer" onSubmit={({ text }) => { void send(text); }}>
-              <PromptInputTextarea ref={textarea} value={input} onChange={e => setInput(e.target.value)} placeholder="Popiš, co chceš udělat…" maxLength={8000} aria-label="Zadání příkazu" />
-              <PromptInputFooter><div className="composer-language"><Terminal size={14} /> BASH <span>/</span> KALI LINUX</div><PromptInputSubmit status={status} disabled={!busy && !input.trim()} onStop={() => abortRef.current?.abort()} aria-label={busy ? "Zastavit odpověď" : "Vygenerovat příkaz"} /></PromptInputFooter>
+              <PromptInputTextarea ref={textarea} value={input} onChange={e => setInput(e.target.value)} placeholder={mode === "script" ? "Popiš, co má skript udělat…" : "Popiš, co chceš udělat…"} maxLength={8000} aria-label="Zadání příkazu" />
+               <PromptInputFooter><div className="composer-language"><Terminal size={14} /> BASH <span>/</span> KALI LINUX</div><PromptInputSubmit status={status} disabled={!busy && !input.trim()} onStop={() => abortRef.current?.abort()} aria-label={busy ? "Zastavit odpověď" : mode === "script" ? "Vygenerovat skript" : "Vygenerovat příkaz"} /></PromptInputFooter>
             </PromptInput>
             <div className="composer-note"><ShieldCheck size={12} /><span>Příkazy před spuštěním ověř. Pouze pro autorizované testování.</span></div>
           </div>

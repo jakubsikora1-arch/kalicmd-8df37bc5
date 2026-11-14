@@ -1,29 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { streamMessage, GatewayError } from "@lovable.dev/ai-gateway";
-import { KALI_SYSTEM_PROMPT } from "@/lib/kali-prompt";
-
-type ChatMsg = { role: "user" | "assistant"; content: string };
-
-function parseMessages(body: unknown): ChatMsg[] | null {
-  if (!body || typeof body !== "object" || !Array.isArray((body as { messages?: unknown }).messages)) return null;
-  const raw = (body as { messages: unknown[] }).messages.slice(-30);
-  const out: ChatMsg[] = [];
-  for (const m of raw) {
-    if (!m || typeof m !== "object") return null;
-    const { role, content } = m as Record<string, unknown>;
-    if ((role !== "user" && role !== "assistant") || typeof content !== "string") return null;
-    if (content.length > 8000) return null;
-    out.push({ role, content });
-  }
-  return out.length && out.at(-1)?.role === "user" ? out : null;
-}
+import { KALI_SCRIPT_PROMPT, KALI_SYSTEM_PROMPT } from "@/lib/kali-prompt";
+import { parseChatRequest } from "@/lib/chat-request";
 
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const messages = parseMessages(await request.json().catch(() => null));
-        if (!messages) return new Response("Neplatný požadavek", { status: 400 });
+        const data = parseChatRequest(await request.json().catch(() => null));
+        if (!data) return new Response("Neplatný požadavek", { status: 400 });
 
         let stream;
         try {
@@ -31,8 +16,8 @@ export const Route = createFileRoute("/api/chat")({
             {
               model: "anthropic/claude-sonnet-5",
               max_tokens: 2048,
-              system: KALI_SYSTEM_PROMPT,
-              messages,
+              system: data.mode === "script" ? KALI_SCRIPT_PROMPT : KALI_SYSTEM_PROMPT,
+              messages: data.messages,
             },
             { signal: request.signal },
           );
