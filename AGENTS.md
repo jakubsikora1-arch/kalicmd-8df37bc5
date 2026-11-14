@@ -31,6 +31,7 @@ use the editor.
 
 ## Application architecture
 - Keep model calls in the server streaming route and use the AI Gateway SDK; secrets must never enter browser bundles.
-- Keep conversation messages in React session state only; the app has no account or history persistence.
+- Keep conversation messages in React session state only; persist nothing unless the user explicitly saves it, because the app has no account and no history feature.
+- Reach persisted data (saved scripts, usage records) only through database functions scoped to the browser's own session id, never by direct table access from the browser, so one visitor cannot read another's data.
 - Compose chat with installed AI Elements and keep visual tokens in the global stylesheet for consistency.
 - Script mode uses the existing streaming endpoint; only completed shebang-prefixed Bash blocks become client-generated downloads, never automatic local execution.

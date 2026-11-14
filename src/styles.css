@@ -179,6 +179,12 @@
   .composer-area { @apply mx-auto w-full max-w-3xl shrink-0 px-4 pb-3 sm:px-6; }
   .error-notice { @apply mb-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-foreground; }
   .script-download { @apply mt-2 flex w-full min-w-0 flex-col gap-3 rounded-lg border border-primary/30 bg-card p-4; }
+  .saved-panel { @apply mx-auto w-full max-w-3xl shrink-0 px-4 pt-3 sm:px-6; }
+  .saved-inner { @apply max-h-56 overflow-y-auto rounded-lg border border-primary/30 bg-card/95 p-3; }
+  .saved-head { @apply mb-2 flex items-center justify-between gap-2; }
+  .saved-title { @apply text-[10px] tracking-[0.18em] text-muted-foreground; }
+  .saved-item { @apply flex items-center justify-between gap-3 rounded-md border border-border bg-background/60 px-3 py-2; }
+  .saved-item + .saved-item { @apply mt-2; }
   .command-composer { @apply rounded-xl border-primary/40 bg-card shadow-glow; }
   .composer-language { @apply flex items-center gap-2 text-[10px] tracking-[0.12em] text-muted-foreground; }
   .composer-language span { @apply text-primary; }

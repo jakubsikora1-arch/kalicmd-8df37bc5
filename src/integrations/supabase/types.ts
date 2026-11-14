@@ -14,13 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      saved_scripts: {
+        Row: {
+          created_at: string
+          id: string
+          script: string
+          session_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          script: string
+          session_id: string
+          title?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          script?: string
+          session_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      usage_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: number
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: never
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: never
+          session_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      kalicmd_delete_script: {
+        Args: { _id: string; _session: string }
+        Returns: undefined
+      }
+      kalicmd_list_scripts: {
+        Args: { _session: string }
+        Returns: {
+          created_at: string
+          id: string
+          script: string
+          title: string
+        }[]
+      }
+      kalicmd_record_usage: {
+        Args: { _event: string; _session: string }
+        Returns: undefined
+      }
+      kalicmd_request_probe: { Args: never; Returns: Json }
+      kalicmd_save_script: {
+        Args: { _script: string; _session: string; _title: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

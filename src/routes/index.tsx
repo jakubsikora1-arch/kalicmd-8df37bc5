@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
-import { ArrowUpRight, Check, ChevronRight, Copy, Crosshair, EthernetPort, FileCode2, Fingerprint, Network, RotateCcw, ShieldCheck, Terminal, Waves } from "lucide-react";
+import { ArrowUpRight, BookmarkPlus, Check, ChevronRight, Copy, Crosshair, Download, EthernetPort, FileCode2, Fingerprint, Network, RotateCcw, ShieldCheck, Terminal, Trash2, Waves, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -9,8 +9,9 @@ import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit 
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import logo from "@/assets/logo.png";
 import { ScriptDownload } from "@/components/script-download";
-import { extractBashScript } from "@/lib/bash-script";
+import { downloadScript, extractBashScript } from "@/lib/bash-script";
 import type { GenerationMode } from "@/lib/chat-request";
+import { deleteSavedScript, listSavedScripts, recordUsage, saveSavedScript, type SavedScript } from "@/lib/saved-scripts";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -39,11 +40,24 @@ function Index() {
   const [status, setStatus] = useState<"ready" | "submitted" | "streaming">("ready");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const [savedScripts, setSavedScripts] = useState<SavedScript[]>([]);
+  const [showSaved, setShowSaved] = useState(false);
+  const [savedError, setSavedError] = useState("");
+  const [savingFor, setSavingFor] = useState<string | null>(null);
+  const [savedFor, setSavedFor] = useState<Record<string, boolean>>({});
   const textarea = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const prompts = useRef<Record<string, string>>({});
   const busy = status !== "ready";
   useEffect(() => { textarea.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => () => { abortRef.current?.abort(); }, []);
+  useEffect(() => {
+    let active = true;
+    void listSavedScripts()
+      .then(rows => { if (active) setSavedScripts(rows); })
+      .catch(() => { if (active) setSavedError("Uložené skripty se nepodařilo načíst."); });
+    return () => { active = false; };
+  }, []);
 
   function choose(text: string) {
     setInput(text);
@@ -62,6 +76,7 @@ function Index() {
     const abort = new AbortController();
     abortRef.current = abort;
     const id = crypto.randomUUID();
+    prompts.current[id] = text.trim();
     let answer = "";
     try {
       const response = await fetch("/api/chat", {
@@ -97,8 +112,34 @@ function Index() {
   }
 
   async function copy(id: string, text: string) {
-    try { await navigator.clipboard.writeText(text); setCopied(id); setTimeout(() => setCopied(null), 1800); }
+    try { await navigator.clipboard.writeText(text); setCopied(id); setTimeout(() => setCopied(null), 1800); void recordUsage("copy_command"); }
     catch { setError("Kopírování není dostupné. Označte příkaz a zkopírujte jej ručně."); }
+  }
+
+  async function saveScript(messageId: string, script: string) {
+    setSavingFor(messageId);
+    setError("");
+    try {
+      const prompt = prompts.current[messageId] ?? "";
+      const title = prompt.split("\n")[0]?.trim().slice(0, 80) || "Skript";
+      await saveSavedScript(title, script);
+      setSavedScripts(await listSavedScripts());
+      setSavedFor(previous => ({ ...previous, [messageId]: true }));
+      void recordUsage("save_script");
+    } catch {
+      setError("Skript se nepodařilo uložit. Zkuste to znovu.");
+    } finally {
+      setSavingFor(null);
+    }
+  }
+
+  async function removeScript(id: string) {
+    try {
+      await deleteSavedScript(id);
+      setSavedScripts(previous => previous.filter(item => item.id !== id));
+    } catch {
+      setError("Skript se nepodařilo smazat.");
+    }
   }
 
   return (
@@ -119,7 +160,28 @@ function Index() {
         </aside>
 
         <main className="main-workspace">
-          <div className="workspace-bar"><div className="flex items-center gap-2"><span className="text-primary">~/</span> generátor <span className="text-muted-foreground">/ bash</span></div><Button variant="ghost" size="icon-sm" title="Vymazat konverzaci" aria-label="Vymazat konverzaci" disabled={busy || messages.length === 0} onClick={() => { setMessages([]); setFinishedScripts({}); setError(""); setInput(""); textarea.current?.focus(); }}><RotateCcw /></Button></div>
+          <div className="workspace-bar"><div className="flex items-center gap-2"><span className="text-primary">~/</span> generátor <span className="text-muted-foreground">/ bash</span></div><div className="flex items-center gap-1"><Button variant="ghost" size="sm" className="text-muted-foreground" aria-pressed={showSaved} onClick={() => { setShowSaved(value => !value); setSavedError(""); }}><BookmarkPlus />Uložené{savedScripts.length > 0 ? ` (${savedScripts.length})` : ""}</Button><Button variant="ghost" size="icon-sm" title="Vymazat konverzaci" aria-label="Vymazat konverzaci" disabled={busy || messages.length === 0} onClick={() => { setMessages([]); setFinishedScripts({}); setError(""); setInput(""); textarea.current?.focus(); }}><RotateCcw /></Button></div></div>
+
+          {showSaved && (
+            <div className="saved-panel">
+              <div className="saved-inner">
+                <div className="saved-head"><span className="saved-title">ULOŽENÉ SKRIPTY</span><Button variant="ghost" size="icon-sm" title="Zavřít uložené skripty" aria-label="Zavřít uložené skripty" onClick={() => setShowSaved(false)}><X /></Button></div>
+                {savedError && <div role="alert" className="error-notice">{savedError}</div>}
+                {savedScripts.length === 0 && !savedError ? (
+                  <p className="text-xs text-muted-foreground">Zatím nic uloženého. U vygenerovaného skriptu klikni na „Uložit“.</p>
+                ) : savedScripts.map(item => (
+                  <div className="saved-item" key={item.id}>
+                    <div className="min-w-0"><div className="truncate text-sm text-foreground">{item.title}</div><div className="text-[10px] text-muted-foreground">{new Date(item.created_at).toLocaleString("cs-CZ")} · {item.script.split("\n").filter(Boolean).length} řádků</div></div>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <Button variant="ghost" size="icon-sm" title="Kopírovat skript" aria-label="Kopírovat skript" onClick={() => { void copy(item.id, item.script); }}><Copy /></Button>
+                      <Button variant="ghost" size="icon-sm" title="Stáhnout skript" aria-label="Stáhnout skript" onClick={() => { downloadScript(item.script); void recordUsage("download_script"); }}><Download /></Button>
+                      <Button variant="ghost" size="icon-sm" title="Smazat skript" aria-label="Smazat skript" onClick={() => { void removeScript(item.id); }}><Trash2 /></Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <Conversation className="transcript">
             <ConversationContent className="conversation-inner">
@@ -141,7 +203,7 @@ function Index() {
                   {message.role === "assistant" && <div className="assistant-label"><Terminal size={14} /> KALICMD <span>CLAUDE</span></div>}
                   <MessageContent>{message.parts.map((part, i) => part.type === "text" ? message.role === "assistant" ? <MessageResponse key={i}>{part.text}</MessageResponse> : <div key={i} className="whitespace-pre-wrap">{part.text}</div> : null)}</MessageContent>
                   {message.role === "assistant" && !busy && <div><Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => { const text = message.parts.flatMap(p => p.type === "text" ? [p.text] : []).join("\n"); const blocks = [...text.matchAll(/```(?:bash|sh|shell)?\n([\s\S]*?)```/g)]; void copy(message.id, blocks.length ? blocks.map(b => b[1]?.trim()).join("\n\n") : text); }}>{copied === message.id ? <Check /> : <Copy />}{copied === message.id ? "Zkopírováno" : "Kopírovat příkazy"}</Button></div>}
-                  {script && <ScriptDownload script={script} onCopy={text => { void copy(message.id, text); }} />}
+                  {script && <ScriptDownload script={script} onCopy={text => { void copy(message.id, text); }} onSave={() => { void saveScript(message.id, script); }} saving={savingFor === message.id} saved={Boolean(savedFor[message.id])} onDownload={() => { void recordUsage("download_script"); }} />}
                 </Message>
               ); })}
               {status === "submitted" && <Shimmer>{mode === "script" ? "Claude připravuje skript…" : "Claude připravuje příkaz…"}</Shimmer>}
@@ -161,7 +223,7 @@ function Index() {
             </PromptInput>
             <div className="composer-note"><ShieldCheck size={12} /><span>Příkazy před spuštěním ověř. Pouze pro autorizované testování.</span></div>
           </div>
-          <footer className="workspace-footer"><span><span className="status-dot" /> BEZ PŘIHLÁŠENÍ · BEZ UKLÁDÁNÍ HISTORIE</span><span className="footer-right"><EthernetPort size={12} /> KALI LINUX / GNU BASH</span></footer>
+          <footer className="workspace-footer"><span><span className="status-dot" /> BEZ PŘIHLÁŠENÍ · SKRIPTY ULOŽENÉ V TOMTO PROHLÍŽEČI</span><span className="footer-right"><EthernetPort size={12} /> KALI LINUX / GNU BASH</span></footer>
         </main>
       </div>
     </div>
