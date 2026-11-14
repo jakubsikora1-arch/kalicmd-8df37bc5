@@ -67,7 +67,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      kalicmd_claim_scripts: { Args: { _session: string }; Returns: number }
       kalicmd_delete_script: {
         Args: { _id: string; _session: string }
         Returns: undefined
