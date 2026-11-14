@@ -7,7 +7,7 @@ import { Conversation, ConversationContent, ConversationScrollButton } from "@/c
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { toolCatalog, toolPrefix, scopedInput, type Tool } from "@/lib/tool-catalog";
+import { catalogTitle, toolCatalog, toolPrefix, scopedInput, type Tool } from "@/lib/tool-catalog";
 import { ToolGuide } from "@/components/tool-guide";
 import logo from "@/assets/logo.png";
 import { ConfirmAction } from "@/components/confirm-action";
@@ -208,6 +208,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
                   <div className="eyebrow"><span className="text-primary">$</span> PŘIROZENÝ JAZYK → BASH</div>
                   <h1>KaliCmd<span className="text-primary">_</span></h1>
                   <p className="welcome-description">Co dnes potřebuješ<br className="sm:hidden" /> dostat do terminálu?</p>
+                  <h2 className="mt-6 text-sm font-semibold text-primary">{catalogTitle}</h2>
                   <div className="suggestions">
                     {tools.map(t => <Button asChild variant="ghost" key={t.name} className="suggestion"><Link to="/tools/$tool" params={{ tool: t.id }}><div className="suggestion-top"><t.icon size={19} /><span>{t.category}</span><ArrowUpRight size={16} /></div><span className="suggestion-title">{t.name} <ChevronRight size={16} /></span></Link></Button>)}
                   </div>

@@ -13,3 +13,4 @@
 - [x] Rename tool blocks and match the supplied layout.
 - [x] Add tool pages with basic information and five commands each.
 - [x] Scope AI requests to the selected tool and verify main/tool flows.
+- [x] Update only the requested top-ten catalog content and verify tool navigation and command counts.

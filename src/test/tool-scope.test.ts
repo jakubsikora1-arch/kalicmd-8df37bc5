@@ -4,8 +4,19 @@ import { parseChatRequest } from "@/lib/chat-request";
 import { buildKaliPrompt } from "@/lib/kali-prompt";
 
 describe("tool workspaces", () => {
-  it.each(["nmap", "hashcat", "wireshark", "metasploit"])("provides exactly five commands for %s", id => {
-    expect(findTool(id)?.commands).toHaveLength(5);
+  it("contains exactly the requested ten tools in ranked order", () => {
+    expect(toolCatalog.map(tool => tool.id)).toEqual(["nmap", "wireshark", "metasploit", "burp", "aircrack-ng", "john", "hashcat", "sqlmap", "gobuster", "nikto"]);
+    expect(toolCatalog.map(tool => tool.rank)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  });
+  it.each(toolCatalog)("provides exactly five commands or functions for $name", tool => {
+    expect(tool.commands).toHaveLength(5);
+  });
+  it("distinguishes Burp shell commands from GUI functions", () => {
+    expect(findTool("burp")?.commands.map(item => item.type)).toEqual(["shell", "shell", "gui", "gui", "gui"]);
+    expect(findTool("burp")?.exampleType).toBe("gui");
+  });
+  it("distinguishes Metasploit shell startup from console commands", () => {
+    expect(findTool("metasploit")?.commands.map(item => item.type)).toEqual(["shell", "console", "console", "console", "console"]);
   });
   it("keeps the general composer empty", () => expect(toolPrefix()).toBe(""));
   it("adds and preserves the selected tool marker", () => {
