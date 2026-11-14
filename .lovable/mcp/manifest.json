@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "sdk_version": "3.5.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "kalicmd",
+      "version": "1.0.0",
+      "title": "Kalicmd"
+    },
+    "tools": [
+      {
+        "name": "list_kali_tools",
+        "title": "Katalog TOP 10",
+        "description": "Vypíše veřejný katalog deseti nástrojů Kali Linuxu s identifikátory a kategoriemi.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_kali_tool",
+        "title": "Detail nástroje Kali",
+        "description": "Vrátí veřejný popis, ovládání, pět příkazů nebo funkcí a laboratorní příklad vybraného nástroje.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "tool_id": {
+              "type": "string",
+              "enum": [
+                "nmap",
+                "wireshark",
+                "metasploit",
+                "burp",
+                "aircrack-ng",
+                "john",
+                "hashcat",
+                "sqlmap",
+                "gobuster",
+                "nikto"
+              ],
+              "description": "Identifikátor nástroje z list_kali_tools."
+            }
+          },
+          "required": [
+            "tool_id"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

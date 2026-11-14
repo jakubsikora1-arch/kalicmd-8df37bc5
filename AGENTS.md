@@ -39,3 +39,4 @@ use the editor.
 - Use the shared controlled confirmation dialog for irreversible actions; keep it open during deletion and on failure to prevent duplicate requests and preserve retry context.
 - Reuse CommandWorkspace across the main and dynamic tool routes, with catalog-validated tool IDs sent separately to the streaming endpoint; visible tool markers must not be the authority for AI scope.
 - Keep catalog ranks, controls, examples and shell/GUI/console kinds in the shared tool catalog so tool details and navigation use one content source.
+- Expose only static public catalog reads through SDK-generated MCP routes; use a JSON projection shared with page-local WebMCP reads to exclude icons, sessions, saved scripts and model calls.

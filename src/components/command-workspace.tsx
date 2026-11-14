@@ -1,4 +1,7 @@
 import { Link } from "@tanstack/react-router";
+import { useWebMCP } from "use-webmcp-tool";
+import { getCatalogTool, listCatalog } from "@/lib/catalog-output";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { ArrowLeft, ArrowUpRight, BookmarkPlus, Check, ChevronRight, Copy, Download, EthernetPort, FileCode2, RotateCcw, ShieldCheck, Terminal, Trash2, X } from "lucide-react";
@@ -41,6 +44,17 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
   const abortRef = useRef<AbortController | null>(null);
   const prompts = useRef<Record<string, string>>({});
   const busy = status !== "ready";
+
+  useWebMCP({
+    name: "read_kali_page",
+    description: "Přečte veřejný katalog na hlavní stránce nebo příkazy právě otevřeného nástroje; nemění stránku.",
+    annotations: { readOnlyHint: true },
+    execute: () => runWebMCPTool("read_kali_page", () => {
+      if (!tool) return listCatalog().map(t => `${t.rank}. ${t.name} (${t.id}) — ${t.category}`).join("\n");
+      const detail = getCatalogTool(tool.id);
+      return `${detail.name}\n${detail.description}\n${detail.control}\n${detail.commands.map(c => `${c.type}: ${c.command} — ${c.description}`).join("\n")}\nPříklad (${detail.exampleType}): ${detail.example}\n${detail.exampleDescription}`;
+    }),
+  });
 
   useEffect(() => () => { abortRef.current?.abort(); }, []);
   const loadSaved = useCallback(async () => {
