@@ -12,11 +12,21 @@ describe("tool workspaces", () => {
     expect(tool.commands).toHaveLength(5);
   });
   it("distinguishes Burp shell commands from GUI functions", () => {
-    expect(findTool("burp")?.commands.map(item => item.type)).toEqual(["shell", "shell", "gui", "gui", "gui"]);
+    expect(findTool("burp")?.commands.map(item => item.type)).toEqual(["shell", "shell", "shell", "gui", "gui"]);
     expect(findTool("burp")?.exampleType).toBe("gui");
   });
   it("distinguishes Metasploit shell startup from console commands", () => {
     expect(findTool("metasploit")?.commands.map(item => item.type)).toEqual(["shell", "console", "console", "console", "console"]);
+  });
+  it("uses Kali documented Burp version invocation", () => {
+    expect(findTool("burp")?.commands[2]?.command).toBe("burpsuite --version");
+  });
+  it("uses the supported Gobuster DNS domain option", () => {
+    expect(findTool("gobuster")?.commands[3]?.command).toBe("gobuster dns --domain example.test -w subdomains.txt");
+  });
+  it("supplies administrator permissions for monitor capture and process checks", () => {
+    expect(findTool("aircrack-ng")?.commands[2]?.command).toBe("sudo airmon-ng check");
+    expect(findTool("aircrack-ng")?.commands[3]?.command).toBe("sudo airodump-ng wlan0mon");
   });
   it("keeps the general composer empty", () => expect(toolPrefix()).toBe(""));
   it("adds and preserves the selected tool marker", () => {

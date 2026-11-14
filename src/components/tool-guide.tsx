@@ -9,6 +9,7 @@ export function ToolGuide({ tool, copied, onCopy }: { tool: Tool; copied: string
     <p className="mt-3 text-sm leading-6 text-muted-foreground">{tool.info}</p>
     <h2 className="mt-6 text-sm font-semibold text-primary">OVLÁDÁNÍ</h2>
     <p className="mt-2 text-sm leading-6 text-muted-foreground">{tool.control}</p>
+    <p className="mt-2 text-xs leading-5 text-muted-foreground">Kontrola dokumentace: 14. 11. 2026 · <a className="text-primary underline" href={`https://www.kali.org/tools/${tool.id === "burp" ? "burpsuite" : tool.id === "metasploit" ? "metasploit-framework" : tool.id}/`} target="_blank" rel="noreferrer">Kali Tools</a>. Verze balíčků se v Kali Rolling průběžně mění; konkrétní instalace uživatele není ověřena.</p>
     <h2 className="mt-6 text-sm font-semibold text-primary">TOP 5 PŘÍKAZŮ / FUNKCÍ</h2>
     <ol className="tool-commands">{tool.commands.map((item, i) => {
       const id = `${tool.id}-${i}`;
