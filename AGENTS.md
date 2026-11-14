@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Application architecture
+- Keep model calls in the server streaming route and use the AI Gateway SDK; secrets must never enter browser bundles.
+- Keep conversation messages in React session state only; the app has no account or history persistence.
+- Compose chat with installed AI Elements and keep visual tokens in the global stylesheet for consistency.
