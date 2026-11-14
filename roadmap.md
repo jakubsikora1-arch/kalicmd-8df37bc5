@@ -6,3 +6,6 @@
 - [x] Verify script generation, downloaded file and mobile controls.
 - [x] Store saved scripts and usage records in the database, scoped to this browser.
 - [x] Verify saving, listing and deleting saved scripts plus mobile layout.
+- [x] Improve mobile welcome, touch targets, safe areas and reduced motion (real iPhone Safari remains unverified).
+- [x] Add saved-script loading/retry, copy feedback and destructive confirmations.
+- [x] Translate fallback pages and verify actual generation/save/download flows and accessibility.

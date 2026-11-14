@@ -140,16 +140,16 @@
 @layer components {
   .app-shell { @apply flex h-dvh flex-col overflow-hidden bg-background text-foreground; }
   .app-header { @apply flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur sm:px-6; }
-  .brand { @apply flex items-center gap-2 font-sans text-xl font-bold tracking-tight; }
+  .brand { @apply flex items-center gap-2 font-sans text-xl font-bold; }
   .brand img { @apply size-10 object-contain; filter: drop-shadow(0 0 10px color-mix(in oklab, var(--primary) 45%, transparent)); }
   .brand-cursor { @apply animate-pulse text-primary; }
   .header-right { @apply flex items-center gap-4; }
-  .header-caption { @apply hidden text-[10px] tracking-[0.2em] text-muted-foreground md:block; }
+  .header-caption { @apply hidden text-xs tracking-normal text-muted-foreground md:block; }
   .model-badge { @apply flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground; }
   .status-dot { @apply inline-block size-1.5 rounded-full bg-primary; box-shadow: 0 0 10px var(--primary); }
   .workspace { @apply flex min-h-0 flex-1; }
   .tool-sidebar { @apply hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar p-4 lg:flex; }
-  .sidebar-label { @apply mb-3 flex items-center gap-2 px-2 text-[10px] tracking-[0.18em] text-muted-foreground; }
+  .sidebar-label { @apply mb-3 flex items-center gap-2 px-2 text-xs tracking-normal text-muted-foreground; }
   .sidebar-active { @apply flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-2.5 text-sm text-primary; }
   .sidebar-tool { @apply h-10 w-full justify-start px-3 font-normal text-muted-foreground hover:text-foreground; }
   .sidebar-bottom { @apply mt-auto flex gap-3 rounded-lg border border-border bg-card p-3 text-xs text-primary; }
@@ -162,34 +162,78 @@
   .welcome { @apply flex flex-col items-center py-4 text-center sm:py-10; }
   .welcome-mark { @apply mb-5 grid size-24 place-items-center rounded-2xl border border-primary/30 bg-card shadow-glow; }
   .welcome-mark img { @apply size-20 object-contain; }
-  .eyebrow { @apply mb-3 text-[11px] tracking-[0.2em] text-muted-foreground; }
-  .welcome h1 { @apply font-sans text-5xl font-bold tracking-tight sm:text-6xl; }
+  .eyebrow { @apply mb-3 text-[11px] tracking-normal text-muted-foreground; }
+  .welcome h1 { @apply font-sans text-5xl font-bold sm:text-6xl; }
   .welcome-description { @apply mt-3 font-sans text-lg text-muted-foreground sm:text-xl; }
   .suggestions { @apply mt-8 grid w-full grid-cols-1 gap-3 sm:grid-cols-2; }
-  .suggestion { @apply flex cursor-pointer flex-col gap-2 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border-border bg-card/80 p-4 text-left hover:border-primary/50 hover:bg-card; }
-  .suggestion-top { @apply flex items-center gap-2 text-[10px] tracking-[0.15em] text-muted-foreground; }
+  .suggestion { @apply h-auto items-stretch whitespace-normal flex cursor-pointer flex-col gap-2 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border-border bg-card/80 p-4 text-left hover:border-primary/50 hover:bg-card; }
+  .suggestion-top { @apply flex items-center gap-2 text-xs tracking-normal text-muted-foreground; }
   .suggestion-top svg:first-child { @apply text-primary; }
   .suggestion-top svg:last-child { @apply ml-auto; }
   .suggestion-title { @apply font-sans text-base font-bold text-foreground; }
   .suggestion-tool { @apply flex items-center gap-1 text-xs text-primary; }
   .welcome-terminal { @apply mt-6 w-full rounded-lg border border-border bg-card/80 p-4 text-left text-xs leading-6; }
   .terminal-cursor { @apply ml-1 inline-block h-4 w-2 translate-y-0.5 animate-pulse bg-primary; }
-  .assistant-label { @apply flex items-center gap-2 text-[10px] tracking-[0.18em] text-primary; }
+  .assistant-label { @apply flex items-center gap-2 text-xs tracking-normal text-primary; }
   .assistant-label span { @apply text-muted-foreground; }
   .composer-area { @apply mx-auto w-full max-w-3xl shrink-0 px-4 pb-3 sm:px-6; }
   .error-notice { @apply mb-2 rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-foreground; }
   .script-download { @apply mt-2 flex w-full min-w-0 flex-col gap-3 rounded-lg border border-primary/30 bg-card p-4; }
   .saved-panel { @apply mx-auto w-full max-w-3xl shrink-0 px-4 pt-3 sm:px-6; }
-  .saved-inner { @apply max-h-56 overflow-y-auto rounded-lg border border-primary/30 bg-card/95 p-3; }
+  .saved-inner { @apply max-h-56 overflow-y-auto border-b border-border pb-3; }
   .saved-head { @apply mb-2 flex items-center justify-between gap-2; }
-  .saved-title { @apply text-[10px] tracking-[0.18em] text-muted-foreground; }
-  .saved-item { @apply flex items-center justify-between gap-3 rounded-md border border-border bg-background/60 px-3 py-2; }
+  .saved-title { @apply text-xs tracking-normal text-muted-foreground; }
+  .saved-item { @apply grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border py-3; }
   .saved-item + .saved-item { @apply mt-2; }
   .command-composer { @apply rounded-xl border-primary/40 bg-card shadow-glow; }
-  .composer-language { @apply flex items-center gap-2 text-[10px] tracking-[0.12em] text-muted-foreground; }
+  .composer-language { @apply flex items-center gap-2 text-xs tracking-normal text-muted-foreground; }
   .composer-language span { @apply text-primary; }
-  .composer-note { @apply mt-2 flex items-center justify-center gap-1.5 text-center text-[10px] text-muted-foreground; }
-  .workspace-footer { @apply hidden h-8 shrink-0 items-center justify-between border-t border-border bg-background px-4 text-[10px] tracking-[0.12em] text-muted-foreground sm:flex; }
+  .composer-note { @apply mt-2 flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground; }
+  .workspace-footer { @apply hidden h-8 shrink-0 items-center justify-between border-t border-border bg-background px-4 text-xs tracking-normal text-muted-foreground sm:flex; }
   .workspace-footer > span { @apply flex items-center gap-2; }
   .footer-right { @apply text-primary; }
+}
+
+/* Stable touch areas apply to tool controls without enlarging their icons. */
+.app-shell button, .confirmation-dialog button { min-height: 44px; }
+.app-shell button[aria-label], .confirmation-dialog button { min-width: 44px; }
+.app-shell .suggestion { height: auto; min-height: 112px; align-items: stretch; white-space: normal; }
+.suggestion > * { flex-shrink: 0; }
+.confirmation-dialog { background-color: var(--background); }
+.app-header { padding-top: env(safe-area-inset-top); height: calc(4rem + env(safe-area-inset-top)); padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+.workspace-bar { min-height: 52px; height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.workspace-bar > div { min-width: 0; }
+.welcome-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.composer-area { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.command-composer textarea { font-size: 16px; max-height: 160px; }
+.script-download-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.confirmation-dialog { width: calc(100% - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; border-radius: var(--radius); }
+.workspace-footer { font-size: 10px; }
+@media (max-width: 639px) {
+  .welcome { padding-block: 8px; }
+  .conversation-inner { padding-block: 12px; }
+  .welcome-mark, .eyebrow, .welcome-terminal { display: none; }
+  .welcome h1 { font-size: 32px; }
+  .welcome-description { margin-top: 8px; font-size: 16px; }
+  .welcome-description br { display: none; }
+  .suggestions { margin-top: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .app-shell .suggestion { min-height: 96px; padding: 12px; gap: 6px; }
+  .suggestion-top span { display: none; }
+  .suggestion-title { font-size: 14px; }
+  .composer-language { font-size: 11px; }
+  .composer-note { font-size: 11px; align-items: flex-start; }
+  .composer-note svg { flex-shrink: 0; margin-top: 2px; }
+  .script-download-head { grid-template-columns: minmax(0, 1fr); }
+  .script-download-head > div { justify-content: flex-end; }
+  .saved-item { grid-template-columns: minmax(0, 1fr); }
+  .saved-item > div:last-child { justify-content: flex-end; }
+  .saved-inner { max-height: min(224px, 30dvh); }
+}
+@media (max-height: 520px) {
+  .app-header, .composer-note, .workspace-footer { display: none; }
+  .composer-area { padding-top: 4px; }
+  .command-composer textarea { max-height: 80px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

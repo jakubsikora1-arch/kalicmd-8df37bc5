@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { UIMessage } from "ai";
 import { ArrowUpRight, BookmarkPlus, Check, ChevronRight, Copy, Crosshair, Download, EthernetPort, FileCode2, Fingerprint, Network, RotateCcw, ShieldCheck, Terminal, Trash2, Waves, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import logo from "@/assets/logo.png";
+import { ConfirmAction } from "@/components/confirm-action";
 import { ScriptDownload } from "@/components/script-download";
 import { downloadScript, extractBashScript } from "@/lib/bash-script";
 import type { GenerationMode } from "@/lib/chat-request";
@@ -43,21 +44,36 @@ function Index() {
   const [savedScripts, setSavedScripts] = useState<SavedScript[]>([]);
   const [showSaved, setShowSaved] = useState(false);
   const [savedError, setSavedError] = useState("");
+  const [savedLoading, setSavedLoading] = useState(true);
+  const [confirmation, setConfirmation] = useState<{ kind: "reset" } | { kind: "script"; item: SavedScript } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const mounted = useRef(false);
   const [savingFor, setSavingFor] = useState<string | null>(null);
   const [savedFor, setSavedFor] = useState<Record<string, boolean>>({});
   const textarea = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const prompts = useRef<Record<string, string>>({});
   const busy = status !== "ready";
-  useEffect(() => { textarea.current?.focus({ preventScroll: true }); }, []);
+
   useEffect(() => () => { abortRef.current?.abort(); }, []);
-  useEffect(() => {
-    let active = true;
-    void listSavedScripts()
-      .then(rows => { if (active) setSavedScripts(rows); })
-      .catch(() => { if (active) setSavedError("Uložené skripty se nepodařilo načíst."); });
-    return () => { active = false; };
+  const loadSaved = useCallback(async () => {
+    setSavedLoading(true);
+    setSavedError("");
+    try {
+      const rows = await listSavedScripts();
+      if (mounted.current) setSavedScripts(rows);
+    } catch {
+      if (mounted.current) setSavedError("Uložené skripty se nepodařilo načíst. Zkontroluj připojení a zkus to znovu.");
+    } finally {
+      if (mounted.current) setSavedLoading(false);
+    }
   }, []);
+  useEffect(() => {
+    mounted.current = true;
+    void loadSaved();
+    return () => { mounted.current = false; };
+  }, [loadSaved]);
 
   function choose(text: string) {
     setInput(text);
@@ -72,7 +88,6 @@ function Index() {
     setInput("");
     setError("");
     setStatus("submitted");
-    textarea.current?.focus({ preventScroll: true });
     const abort = new AbortController();
     abortRef.current = abort;
     const id = crypto.randomUUID();
@@ -107,7 +122,6 @@ function Index() {
     } finally {
       setStatus("ready");
       abortRef.current = null;
-      textarea.current?.focus({ preventScroll: true });
     }
   }
 
@@ -123,7 +137,7 @@ function Index() {
       const prompt = prompts.current[messageId] ?? "";
       const title = prompt.split("\n")[0]?.trim().slice(0, 80) || "Skript";
       await saveSavedScript(title, script);
-      setSavedScripts(await listSavedScripts());
+      await loadSaved();
       setSavedFor(previous => ({ ...previous, [messageId]: true }));
       void recordUsage("save_script");
     } catch {
@@ -133,12 +147,28 @@ function Index() {
     }
   }
 
-  async function removeScript(id: string) {
+  async function confirmRemoval() {
+    if (!confirmation || deleting) return;
+    if (confirmation.kind === "reset") {
+      setMessages([]);
+      setFinishedScripts({});
+      setSavedFor({});
+      prompts.current = {};
+      setError("");
+      setInput("");
+      setConfirmation(null);
+      return;
+    }
+    setDeleting(true);
+    setDeleteError("");
     try {
-      await deleteSavedScript(id);
-      setSavedScripts(previous => previous.filter(item => item.id !== id));
+      await deleteSavedScript(confirmation.item.id);
+      setSavedScripts(previous => previous.filter(item => item.id !== confirmation.item.id));
+      setConfirmation(null);
     } catch {
-      setError("Skript se nepodařilo smazat.");
+      setDeleteError("Skript se nepodařilo smazat. Zkontroluj připojení a zkus to znovu.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -160,43 +190,47 @@ function Index() {
         </aside>
 
         <main className="main-workspace">
-          <div className="workspace-bar"><div className="flex items-center gap-2"><span className="text-primary">~/</span> generátor <span className="text-muted-foreground">/ bash</span></div><div className="flex items-center gap-1"><Button variant="ghost" size="sm" className="text-muted-foreground" aria-pressed={showSaved} onClick={() => { setShowSaved(value => !value); setSavedError(""); }}><BookmarkPlus />Uložené{savedScripts.length > 0 ? ` (${savedScripts.length})` : ""}</Button><Button variant="ghost" size="icon-sm" title="Vymazat konverzaci" aria-label="Vymazat konverzaci" disabled={busy || messages.length === 0} onClick={() => { setMessages([]); setFinishedScripts({}); setError(""); setInput(""); textarea.current?.focus(); }}><RotateCcw /></Button></div></div>
+          <div className="workspace-bar"><div className="flex items-center gap-2"><span className="text-primary">~/</span> generátor <span className="text-muted-foreground">/ bash</span></div><div className="flex items-center gap-1"><Button variant="ghost" size="sm" className="text-muted-foreground" aria-pressed={showSaved} aria-expanded={showSaved} aria-controls="saved-scripts" onClick={() => { setShowSaved(value => !value); }}><BookmarkPlus />Uložené{savedScripts.length > 0 ? ` (${savedScripts.length})` : ""}</Button><Button variant="ghost" size="icon-sm" title="Vymazat konverzaci" aria-label="Vymazat konverzaci" disabled={busy || messages.length === 0} onClick={() => { setDeleteError(""); setConfirmation({ kind: "reset" }); }}><RotateCcw /></Button></div></div>
 
           {showSaved && (
-            <div className="saved-panel">
+            <section id="saved-scripts" aria-label="Uložené skripty" aria-busy={savedLoading} className="saved-panel">
               <div className="saved-inner">
                 <div className="saved-head"><span className="saved-title">ULOŽENÉ SKRIPTY</span><Button variant="ghost" size="icon-sm" title="Zavřít uložené skripty" aria-label="Zavřít uložené skripty" onClick={() => setShowSaved(false)}><X /></Button></div>
-                {savedError && <div role="alert" className="error-notice">{savedError}</div>}
-                {savedScripts.length === 0 && !savedError ? (
-                  <p className="text-xs text-muted-foreground">Zatím nic uloženého. U vygenerovaného skriptu klikni na „Uložit“.</p>
-                ) : savedScripts.map(item => (
+                {savedLoading && <p role="status" className="text-sm text-muted-foreground">Načítám skripty…</p>}
+                {savedError && <div role="alert" className="error-notice"><p>{savedError}</p><Button variant="outline" size="sm" className="mt-2" onClick={() => { void loadSaved(); }}><RotateCcw />Zkusit znovu</Button></div>}
+                {savedScripts.length === 0 && !savedError && !savedLoading ? (
+                  <p className="text-xs text-muted-foreground">Zatím žádné uložené skripty.</p>
+                ) : !savedLoading && !savedError && savedScripts.map(item => (
                   <div className="saved-item" key={item.id}>
-                    <div className="min-w-0"><div className="truncate text-sm text-foreground">{item.title}</div><div className="text-[10px] text-muted-foreground">{new Date(item.created_at).toLocaleString("cs-CZ")} · {item.script.split("\n").filter(Boolean).length} řádků</div></div>
+                    <div className="min-w-0"><div className="break-words text-sm text-foreground">{item.title}</div><div className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString("cs-CZ")} · {item.script.split("\n").filter(Boolean).length} řádků</div></div>
                     <div className="flex shrink-0 items-center gap-1">
-                      <Button variant="ghost" size="icon-sm" title="Kopírovat skript" aria-label="Kopírovat skript" onClick={() => { void copy(item.id, item.script); }}><Copy /></Button>
+                      <Button variant="ghost" size="icon-sm" title="Kopírovat skript" aria-label="Kopírovat skript" onClick={() => { void copy(item.id, item.script); }}>{copied === item.id ? <Check className="text-primary" /> : <Copy />}</Button>
                       <Button variant="ghost" size="icon-sm" title="Stáhnout skript" aria-label="Stáhnout skript" onClick={() => { downloadScript(item.script); void recordUsage("download_script"); }}><Download /></Button>
-                      <Button variant="ghost" size="icon-sm" title="Smazat skript" aria-label="Smazat skript" onClick={() => { void removeScript(item.id); }}><Trash2 /></Button>
+                      <Button variant="ghost" size="icon-sm" title="Smazat skript" aria-label="Smazat skript" onClick={() => { setDeleteError(""); setConfirmation({ kind: "script", item }); }}><Trash2 /></Button>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          <Conversation className="transcript">
-            <ConversationContent className="conversation-inner">
-              {messages.length === 0 ? (
+          {messages.length === 0 ? (
+            <div className="welcome-scroll"><div className="conversation-inner">
                 <div className="welcome">
                   <div className="welcome-mark"><img src={logo} width={88} height={88} alt="" /></div>
                   <div className="eyebrow"><span className="text-primary">$</span> PŘIROZENÝ JAZYK → BASH</div>
                   <h1>KaliCmd<span className="text-primary">_</span></h1>
                   <p className="welcome-description">Co dnes potřebuješ<br className="sm:hidden" /> dostat do terminálu?</p>
                   <div className="suggestions">
-                    {tools.map((t, i) => <button type="button" key={t.name} className="suggestion" onClick={() => choose(t.example)}><div className="suggestion-top"><t.icon size={19} /><span>{t.category}</span><ArrowUpRight size={16} /></div><span className="suggestion-title">{["Prozkoumat síť", "Ověřit hashe", "Zachytit DNS provoz", "Najít správný modul"][i]}</span><span className="suggestion-tool">{t.name} <ChevronRight size={13} /></span></button>)}
+                    {tools.map((t, i) => <Button variant="ghost" type="button" key={t.name} className="suggestion" onClick={() => choose(t.example)}><div className="suggestion-top"><t.icon size={19} /><span>{t.category}</span><ArrowUpRight size={16} /></div><span className="suggestion-title">{["Prozkoumat síť", "Ověřit hashe", "Zachytit DNS provoz", "Najít správný modul"][i]}</span><span className="suggestion-tool">{t.name} <ChevronRight size={13} /></span></Button>)}
                   </div>
                   <div className="welcome-terminal"><span className="text-primary">┌──(kali㉿kali)-[~]</span><br /><span className="text-primary">└─$ </span><span>připraven na další příkaz</span><span className="terminal-cursor" /></div>
                 </div>
-              ) : messages.map(message => {
+            </div></div>
+          ) : (
+          <Conversation className="transcript">
+            <ConversationContent className="conversation-inner">
+              {messages.map(message => {
                 const script = finishedScripts[message.id];
                 return (
                 <Message from={message.role} key={message.id}>
@@ -210,6 +244,7 @@ function Index() {
             </ConversationContent>
             <ConversationScrollButton aria-label="Posunout na konec" />
           </Conversation>
+          )}
 
           <div className="composer-area">
             <div role="group" aria-label="Režim generování" className="mb-3 flex w-fit gap-1 rounded-md border border-border bg-background p-1">
@@ -218,7 +253,7 @@ function Index() {
             </div>
             {error && <div role="alert" className="error-notice">{error}</div>}
             <PromptInput className="command-composer" onSubmit={({ text }) => { void send(text); }}>
-              <PromptInputTextarea ref={textarea} value={input} onChange={e => setInput(e.target.value)} placeholder={mode === "script" ? "Popiš, co má skript udělat…" : "Popiš, co chceš udělat…"} maxLength={8000} aria-label="Zadání příkazu" />
+              <PromptInputTextarea ref={textarea} value={input} onChange={e => setInput(e.target.value)} placeholder={mode === "script" ? "Popiš, co má skript udělat…" : "Popiš, co chceš udělat…"} maxLength={8000} aria-label={mode === "script" ? "Zadání skriptu" : "Zadání příkazu"} />
                <PromptInputFooter><div className="composer-language"><Terminal size={14} /> BASH <span>/</span> KALI LINUX</div><PromptInputSubmit status={status} disabled={!busy && !input.trim()} onStop={() => abortRef.current?.abort()} aria-label={busy ? "Zastavit odpověď" : mode === "script" ? "Vygenerovat skript" : "Vygenerovat příkaz"} /></PromptInputFooter>
             </PromptInput>
             <div className="composer-note"><ShieldCheck size={12} /><span>Příkazy před spuštěním ověř. Pouze pro autorizované testování.</span></div>
@@ -226,6 +261,8 @@ function Index() {
           <footer className="workspace-footer"><span><span className="status-dot" /> BEZ PŘIHLÁŠENÍ · SKRIPTY ULOŽENÉ V TOMTO PROHLÍŽEČI</span><span className="footer-right"><EthernetPort size={12} /> KALI LINUX / GNU BASH</span></footer>
         </main>
       </div>
+      <div role="status" aria-live="polite" className="sr-only">{copied ? "Zkopírováno do schránky." : ""}</div>
+      <ConfirmAction open={confirmation !== null} title={confirmation?.kind === "reset" ? "Vymazat konverzaci?" : "Smazat uložený skript?"} description={confirmation?.kind === "script" ? `Skript „${confirmation.item.title}“ bude trvale odstraněn z uložených skriptů.` : "Všechny zprávy v tomto rozhovoru budou odstraněny. Uložené skripty zůstanou zachované."} pending={deleting} error={deleteError} onCancel={() => { if (!deleting) setConfirmation(null); }} onConfirm={() => { void confirmRemoval(); }} />
     </div>
   );
 }

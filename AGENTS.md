@@ -35,3 +35,5 @@ use the editor.
 - Reach persisted data (saved scripts, usage records) only through database functions scoped to the browser's own session id, never by direct table access from the browser, so one visitor cannot read another's data.
 - Compose chat with installed AI Elements and keep visual tokens in the global stylesheet for consistency.
 - Script mode uses the existing streaming endpoint; only completed shebang-prefixed Bash blocks become client-generated downloads, never automatic local execution.
+- Render the empty welcome outside the auto-scrolling conversation; reserve stick-to-bottom behavior for actual messages so mobile entry starts at the top.
+- Use the shared controlled confirmation dialog for irreversible actions; keep it open during deletion and on failure to prevent duplicate requests and preserve retry context.
