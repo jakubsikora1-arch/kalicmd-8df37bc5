@@ -11,12 +11,12 @@ export function extractBashScript(text: string): string | null {
   return null;
 }
 
-export function downloadScript(script: string) {
+export function downloadScript(script: string, filename: string = SCRIPT_FILENAME) {
   const blob = new Blob([script], { type: "text/x-shellscript;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = SCRIPT_FILENAME;
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();

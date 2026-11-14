@@ -19,3 +19,4 @@
 - [x] Add consented public MCP catalog tools and page-local WebMCP reads without exposing browser-private data.
 - [x] Verify MCP catalog extraction, anonymous calls for all ten details and existing desktop/mobile page flows (native WebMCP unavailable in test browser).
 - [x] Add Google/Apple sign-in and move saved scripts into owner-protected accounts.
+- [x] Úkol 2: parametrické šablony z uložených .sh skriptů (formulář, validace, deterministický export; bez migrace a spouštění).

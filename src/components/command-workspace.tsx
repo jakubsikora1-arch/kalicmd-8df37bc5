@@ -20,6 +20,9 @@ import { downloadScript, extractBashScript } from "@/lib/bash-script";
 import type { GenerationMode } from "@/lib/chat-request";
 import { AccountButton } from "@/components/account-button";
 import { useAuth } from "@/hooks/use-auth";
+import { ScriptTemplateEditor } from "@/components/script-template-editor";
+import { ScriptTemplateForm } from "@/components/script-template-form";
+import { isScriptTemplate } from "@/lib/script-template-format";
 import { deleteSavedScript, listSavedScripts, recordUsage, saveSavedScript, type SavedScript } from "@/lib/saved-scripts";
 
 const tools = toolCatalog;
@@ -43,6 +46,10 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
   const [deleteError, setDeleteError] = useState("");
   const mounted = useRef(false);
   const [savingFor, setSavingFor] = useState<string | null>(null);
+  const [templateFor, setTemplateFor] = useState<SavedScript | null>(null);
+  const [fillFor, setFillFor] = useState<SavedScript | null>(null);
+  const [templateSaving, setTemplateSaving] = useState(false);
+  const [templateError, setTemplateError] = useState("");
   const [savedFor, setSavedFor] = useState<Record<string, boolean>>({});
   const textarea = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -140,6 +147,21 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
     catch { setError("Kopírování není dostupné. Označte příkaz a zkopírujte jej ručně."); }
   }
 
+  async function saveTemplate(title: string, text: string) {
+    setTemplateSaving(true);
+    setTemplateError("");
+    try {
+      await saveSavedScript(title, text);
+      void recordUsage("save_script");
+      await loadSaved();
+      setTemplateFor(null);
+    } catch {
+      setTemplateError("Šablonu se nepodařilo uložit. Zkus to znovu.");
+    } finally {
+      setTemplateSaving(false);
+    }
+  }
+
   async function saveScript(messageId: string, script: string) {
     setSavingFor(messageId);
     setError("");
@@ -212,8 +234,9 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
                   <p className="text-xs text-muted-foreground">{user ? "Zatím žádné uložené skripty." : "Uložené skripty uvidíš po přihlášení."}</p>
                 ) : !savedLoading && !savedError && savedScripts.map(item => (
                   <div className="saved-item" key={item.id}>
-                    <div className="min-w-0"><div className="break-words text-sm text-foreground">{item.title}</div><div className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString("cs-CZ")} · {item.script.split("\n").filter(Boolean).length} řádků</div></div>
+                    <div className="min-w-0"><div className="break-words text-sm text-foreground">{item.title}</div>{isScriptTemplate(item.script) && <span className="mr-2 rounded border border-primary px-1 text-[10px] uppercase text-primary">Šablona</span>}<span className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString("cs-CZ")} · {item.script.split("\n").filter(Boolean).length} řádků</span></div>
                     <div className="flex shrink-0 items-center gap-1">
+                      {isScriptTemplate(item.script) ? <Button variant="outline" size="sm" onClick={() => setFillFor(item)}>Vyplnit</Button> : <Button variant="ghost" size="sm" disabled={!user} onClick={() => { setTemplateError(""); setTemplateFor(item); }}>Udělat šablonu</Button>}
                       <Button variant="ghost" size="icon-sm" title="Kopírovat skript" aria-label="Kopírovat skript" onClick={() => { void copy(item.id, item.script); }}>{copied === item.id ? <Check className="text-primary" /> : <Copy />}</Button>
                       <Button variant="ghost" size="icon-sm" title="Stáhnout skript" aria-label="Stáhnout skript" onClick={() => { downloadScript(item.script); void recordUsage("download_script"); }}><Download /></Button>
                       <Button variant="ghost" size="icon-sm" title="Smazat skript" aria-label="Smazat skript" onClick={() => { setDeleteError(""); setConfirmation({ kind: "script", item }); }}><Trash2 /></Button>
@@ -277,6 +300,8 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
         </main>
       </div>
       <div role="status" aria-live="polite" className="sr-only">{copied ? "Zkopírováno do schránky." : ""}</div>
+      {templateFor && <ScriptTemplateEditor key={templateFor.id} open title={templateFor.title} script={templateFor.script} saving={templateSaving} error={templateError} onCancel={() => setTemplateFor(null)} onSave={(title, text) => { void saveTemplate(title, text); }} />}
+      {fillFor && <ScriptTemplateForm key={fillFor.id} open title={fillFor.title} script={fillFor.script} onClose={() => setFillFor(null)} onCopy={text => copy(fillFor.id, text)} onDownload={() => { void recordUsage("download_script"); }} />}
       <ConfirmAction open={confirmation !== null} title={confirmation?.kind === "reset" ? "Vymazat konverzaci?" : "Smazat uložený skript?"} description={confirmation?.kind === "script" ? `Skript „${confirmation.item.title}“ bude trvale odstraněn z uložených skriptů.` : "Všechny zprávy v tomto rozhovoru budou odstraněny. Uložené skripty zůstanou zachované."} pending={deleting} error={deleteError} onCancel={() => { if (!deleting) setConfirmation(null); }} onConfirm={() => { void confirmRemoval(); }} />
     </div>
   );
