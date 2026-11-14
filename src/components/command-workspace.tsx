@@ -148,7 +148,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
       const prompt = prompts.current[messageId] ?? "";
       const title = prompt.split("\n")[0]?.trim().slice(0, 80) || "Skript";
       await saveSavedScript(title, script);
-      await loadSaved();
+      if (userId) await loadSaved();
       setSavedFor(previous => ({ ...previous, [messageId]: true }));
       void recordUsage("save_script");
     } catch {
@@ -210,7 +210,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
                 {savedLoading && <p role="status" className="text-sm text-muted-foreground">Načítám skripty…</p>}
                 {savedError && <div role="alert" className="error-notice"><p>{savedError}</p><Button variant="outline" size="sm" className="mt-2" onClick={() => { void loadSaved(); }}><RotateCcw />Zkusit znovu</Button></div>}
                 {savedScripts.length === 0 && !savedError && !savedLoading ? (
-                  <p className="text-xs text-muted-foreground">Zatím žádné uložené skripty.</p>
+                  <p className="text-xs text-muted-foreground">{user ? "Zatím žádné uložené skripty." : "Uložené skripty uvidíš po přihlášení. Skripty uložené bez přihlášení se do účtu přesunou automaticky."}</p>
                 ) : !savedLoading && !savedError && savedScripts.map(item => (
                   <div className="saved-item" key={item.id}>
                     <div className="min-w-0"><div className="break-words text-sm text-foreground">{item.title}</div><div className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString("cs-CZ")} · {item.script.split("\n").filter(Boolean).length} řádků</div></div>
@@ -270,7 +270,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
             </PromptInput>
             <div className="composer-note"><ShieldCheck size={12} /><span>Příkazy před spuštěním ověř. Pouze pro autorizované testování.</span></div>
           </div>
-          <footer className="workspace-footer"><span><span className="status-dot" /> {user ? "PŘIHLÁŠENO · SKRIPTY ULOŽENÉ V TVÉM ÚČTU" : "BEZ PŘIHLÁŠENÍ · SKRIPTY ULOŽENÉ V TOMTO PROHLÍŽEČI"}</span><span className="footer-right"><EthernetPort size={12} /> KALI LINUX / GNU BASH</span></footer>
+          <footer className="workspace-footer"><span><span className="status-dot" /> {user ? "PŘIHLÁŠENO · SKRIPTY ULOŽENÉ V TVÉM ÚČTU" : "BEZ PŘIHLÁŠENÍ · PRO ZOBRAZENÍ SKRIPTŮ SE PŘIHLAS"}</span><span className="footer-right"><EthernetPort size={12} /> KALI LINUX / GNU BASH</span></footer>
         </main>
       </div>
       <div role="status" aria-live="polite" className="sr-only">{copied ? "Zkopírováno do schránky." : ""}</div>

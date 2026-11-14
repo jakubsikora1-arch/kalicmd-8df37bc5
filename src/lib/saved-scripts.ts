@@ -15,7 +15,7 @@ async function currentUserId(): Promise<string | null> {
   return data.session?.user.id ?? null;
 }
 
-// Signed-in users own rows via RLS; anonymous visitors use session-scoped functions.
+// Signed-in users own rows via RLS; anonymous visitors can only save (write-only) until they sign in.
 export async function listSavedScripts(): Promise<SavedScript[]> {
   const userId = await currentUserId();
   if (userId) {
@@ -23,9 +23,8 @@ export async function listSavedScripts(): Promise<SavedScript[]> {
     if (error) throw error;
     return data ?? [];
   }
-  const { data, error } = await supabase.rpc("kalicmd_list_scripts", { _session: getSessionId() });
-  if (error) throw error;
-  return data ?? [];
+  // Anonymous visitors cannot read saved scripts; they appear after sign-in.
+  return [];
 }
 
 export async function saveSavedScript(title: string, script: string): Promise<string> {
@@ -47,8 +46,7 @@ export async function deleteSavedScript(id: string): Promise<void> {
     if (error) throw error;
     return;
   }
-  const { error } = await supabase.rpc("kalicmd_delete_script", { _session: getSessionId(), _id: id });
-  if (error) throw error;
+  throw new Error("Pro mazání skriptů se přihlas.");
 }
 
 // Moves scripts saved anonymously in this browser into the signed-in account.
