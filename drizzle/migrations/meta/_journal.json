@@ -57,6 +57,13 @@
       "when": 1794697541645,
       "tag": "0007_drop_claim_scripts_function",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794697618018,
+      "tag": "0008_drop_legacy_session_header_policies",
+      "breakpoints": true
     }
   ]
 }
