@@ -47,7 +47,7 @@ export function AccountButton({ user, ready }: { user: User | null; ready: boole
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Přihlášení do KaliCmd</DialogTitle>
-            <DialogDescription>Uložené skripty pak uvidíš na všech svých zařízeních a nikdo jiný k nim nemá přístup. Skripty uložené v tomto prohlížeči se přesunou do účtu.</DialogDescription>
+            <DialogDescription>Uložené skripty pak uvidíš na všech svých zařízeních a nikdo jiný k nim nemá přístup.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <button type="button" className="oauth-btn oauth-google" disabled={pending !== null} onClick={() => { void signIn("google"); }}>

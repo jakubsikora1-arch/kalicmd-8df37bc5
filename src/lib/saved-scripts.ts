@@ -15,7 +15,7 @@ async function currentUserId(): Promise<string | null> {
   return data.session?.user.id ?? null;
 }
 
-// Signed-in users own rows via RLS; anonymous visitors can only save (write-only) until they sign in.
+// Signed-in users own rows via RLS; anonymous visitors cannot save or read scripts.
 export async function listSavedScripts(): Promise<SavedScript[]> {
   const userId = await currentUserId();
   if (userId) {
@@ -34,9 +34,7 @@ export async function saveSavedScript(title: string, script: string): Promise<st
     if (error) throw error;
     return data.id;
   }
-  const { data, error } = await supabase.rpc("kalicmd_save_script", { _session: getSessionId(), _title: title, _script: script });
-  if (error) throw error;
-  return data as string;
+  throw new Error("Pro ukládání skriptů se přihlas.");
 }
 
 export async function deleteSavedScript(id: string): Promise<void> {
@@ -47,13 +45,6 @@ export async function deleteSavedScript(id: string): Promise<void> {
     return;
   }
   throw new Error("Pro mazání skriptů se přihlas.");
-}
-
-// Moves scripts saved anonymously in this browser into the signed-in account.
-export async function claimBrowserScripts(): Promise<number> {
-  const { data, error } = await supabase.rpc("kalicmd_claim_scripts", { _session: getSessionId() });
-  if (error) throw error;
-  return data ?? 0;
 }
 
 // Best-effort: losing a usage record must never break the chat.

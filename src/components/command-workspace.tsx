@@ -19,7 +19,7 @@ import { downloadScript, extractBashScript } from "@/lib/bash-script";
 import type { GenerationMode } from "@/lib/chat-request";
 import { AccountButton } from "@/components/account-button";
 import { useAuth } from "@/hooks/use-auth";
-import { claimBrowserScripts, deleteSavedScript, listSavedScripts, recordUsage, saveSavedScript, type SavedScript } from "@/lib/saved-scripts";
+import { deleteSavedScript, listSavedScripts, recordUsage, saveSavedScript, type SavedScript } from "@/lib/saved-scripts";
 
 const tools = toolCatalog;
 
@@ -79,10 +79,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
   }, []);
   useEffect(() => {
     if (!ready) return;
-    void (async () => {
-      if (userId) { try { await claimBrowserScripts(); } catch { /* retried next sign-in */ } }
-      await loadSaved();
-    })();
+    void loadSaved();
   }, [ready, userId, loadSaved]);
 
   function choose(text: string) {
@@ -152,7 +149,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
       setSavedFor(previous => ({ ...previous, [messageId]: true }));
       void recordUsage("save_script");
     } catch {
-      setError("Skript se nepodařilo uložit. Zkuste to znovu.");
+      setError(userId ? "Skript se nepodařilo uložit. Zkuste to znovu." : "Pro uložení skriptu se přihlas (vpravo nahoře). Stáhnout ho můžeš i bez přihlášení.");
     } finally {
       setSavingFor(null);
     }
@@ -210,7 +207,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
                 {savedLoading && <p role="status" className="text-sm text-muted-foreground">Načítám skripty…</p>}
                 {savedError && <div role="alert" className="error-notice"><p>{savedError}</p><Button variant="outline" size="sm" className="mt-2" onClick={() => { void loadSaved(); }}><RotateCcw />Zkusit znovu</Button></div>}
                 {savedScripts.length === 0 && !savedError && !savedLoading ? (
-                  <p className="text-xs text-muted-foreground">{user ? "Zatím žádné uložené skripty." : "Uložené skripty uvidíš po přihlášení. Skripty uložené bez přihlášení se do účtu přesunou automaticky."}</p>
+                  <p className="text-xs text-muted-foreground">{user ? "Zatím žádné uložené skripty." : "Uložené skripty uvidíš po přihlášení."}</p>
                 ) : !savedLoading && !savedError && savedScripts.map(item => (
                   <div className="saved-item" key={item.id}>
                     <div className="min-w-0"><div className="break-words text-sm text-foreground">{item.title}</div><div className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString("cs-CZ")} · {item.script.split("\n").filter(Boolean).length} řádků</div></div>

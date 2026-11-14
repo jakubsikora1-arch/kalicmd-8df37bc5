@@ -43,6 +43,13 @@
       "when": 1794693588372,
       "tag": "0005_lock_anonymous_script_read_delete",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794693639137,
+      "tag": "0006_lock_anonymous_save_and_claim",
+      "breakpoints": true
     }
   ]
 }
