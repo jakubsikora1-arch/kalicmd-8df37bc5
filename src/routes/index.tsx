@@ -47,6 +47,7 @@ function Index() {
   const [savedLoading, setSavedLoading] = useState(true);
   const [confirmation, setConfirmation] = useState<{ kind: "reset" } | { kind: "script"; item: SavedScript } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [composerActive, setComposerActive] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const mounted = useRef(false);
   const [savingFor, setSavingFor] = useState<string | null>(null);
@@ -253,7 +254,7 @@ function Index() {
             </div>
             {error && <div role="alert" className="error-notice">{error}</div>}
             <PromptInput className="command-composer" onSubmit={({ text }) => { void send(text); }}>
-              <PromptInputTextarea ref={textarea} value={input} onChange={e => setInput(e.target.value)} placeholder={mode === "script" ? "Popiš, co má skript udělat…" : "Popiš, co chceš udělat…"} maxLength={8000} aria-label={mode === "script" ? "Zadání skriptu" : "Zadání příkazu"} />
+              <PromptInputTextarea ref={textarea} value={input} onChange={e => setInput(e.target.value)} onFocus={() => setComposerActive(true)} onBlur={() => setComposerActive(false)} className={composerActive || input.length > 0 ? "min-h-16 py-3" : "min-h-9 py-1.5"} placeholder={mode === "script" ? "Popiš, co má skript udělat…" : "Popiš, co chceš udělat…"} maxLength={8000} aria-label={mode === "script" ? "Zadání skriptu" : "Zadání příkazu"} />
                <PromptInputFooter><div className="composer-language"><Terminal size={14} /> BASH <span>/</span> KALI LINUX</div><PromptInputSubmit status={status} disabled={!busy && !input.trim()} onStop={() => abortRef.current?.abort()} aria-label={busy ? "Zastavit odpověď" : mode === "script" ? "Vygenerovat skript" : "Vygenerovat příkaz"} /></PromptInputFooter>
             </PromptInput>
             <div className="composer-note"><ShieldCheck size={12} /><span>Příkazy před spuštěním ověř. Pouze pro autorizované testování.</span></div>
