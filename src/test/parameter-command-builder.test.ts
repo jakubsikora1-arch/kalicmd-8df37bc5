@@ -175,7 +175,7 @@ describe("input validation and injection resistance", () => {
   ])("rejects invalid host %s", (host) =>
     expect(generate("nmap", "scan", "beginner", { host }).ok).toBe(false),
   );
-  it.each(["192.168.1.0/24", "192.168.1.1", "lab.example.test", "::1", "2001:db8::/64"])(
+  it.each(["192.168.1.0/24", "192.168.1.1", "lab.example.test", "::1", "2001:db8::/120"])(
     "accepts valid Nmap host %s",
     (host) => expect(generate("nmap", "scan", "beginner", { host }).ok).toBe(true),
   );
@@ -240,5 +240,72 @@ describe("input validation and injection resistance", () => {
     expect(generate("metasploit", "info", "beginner", { module: "auxiliary/../evil" }).ok).toBe(
       false,
     );
+  });
+});
+describe("Nmap CIDR scope guard", () => {
+  it.each([
+    "192.168.1.17/24",
+    "192.168.1.17/25",
+    "192.168.1.17/32",
+    "2001:db8::17/120",
+    "2001:db8::17/121",
+    "2001:db8::17/128",
+    "192.168.1.17",
+    "2001:db8::17",
+    "lab.example.test",
+  ])("preserves the exact allowed target %s at every level and scan type", (host) => {
+    for (const level of parameterLevels)
+      for (const scan of ["connect", "discovery"])
+        expect(content("nmap", "scan", level.id, { host, scan }).endsWith(quotePosix(host))).toBe(
+          true,
+        );
+  });
+  it.each([
+    "192.168.1.17/0",
+    "192.168.1.17/16",
+    "192.168.1.17/23",
+    "192.168.1.17/119",
+    "192.168.1.17/33",
+    "192.168.1.17/-1",
+    "192.168.1.17/24.5",
+    "192.168.1.17/",
+    "2001:db8::17/0",
+    "2001:db8::17/16",
+    "2001:db8::17/24",
+    "2001:db8::17/119",
+    "2001:db8::17/129",
+    "2001:db8::17/-1",
+    "2001:db8::17/120.5",
+    "2001:db8::17/",
+    "2001:db8:::17/120",
+    "999.168.1.17/24",
+    "lab.example.test/24",
+  ])("rejects %s with explicit allowed ranges, without assembling output", (host) => {
+    for (const level of parameterLevels) {
+      const result = generate("nmap", "scan", level.id, { host });
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error("Unsafe scope accepted");
+      expect(result.errors["host"]).toContain("IPv4 pouze /24–/32, IPv6 pouze /120–/128");
+      expect(result).not.toHaveProperty("output");
+    }
+  });
+  it.each(
+    actions.flatMap(({ tool, action }) =>
+      tool === "nmap"
+        ? []
+        : (getParameterActions(tool).find((a) => a.id === action)?.fields ?? [])
+            .filter((field) => ["host", "capture-filter", "display-filter"].includes(field.kind))
+            .map((field) => ({ tool, action, field })),
+    ),
+  )("does not permit CIDR in address fields for $tool / $action", ({ tool, action, field }) => {
+    for (const host of ["192.168.1.0/24", "2001:db8::/120"]) {
+      const value =
+        field.kind === "capture-filter"
+          ? `host ${host}`
+          : field.kind === "display-filter"
+            ? `ip.addr == ${host}`
+            : host;
+      expect(generate(tool, action, "beginner", { [field.id]: value }).ok).toBe(false);
+    }
   });
 });

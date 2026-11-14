@@ -43,7 +43,13 @@ function validHost(s: string, cidr = false): boolean {
     return false;
   if (parts.length === 2) {
     const prefix = parts[1] ?? "";
-    return ip && /^\d{1,3}$/.test(prefix) && Number(prefix) <= (host.includes(":") ? 128 : 32);
+    const ipv6 = host.includes(":");
+    return (
+      ip &&
+      /^\d{1,3}$/.test(prefix) &&
+      Number(prefix) >= (ipv6 ? 120 : 24) &&
+      Number(prefix) <= (ipv6 ? 128 : 32)
+    );
   }
   return true;
 }
@@ -99,12 +105,12 @@ function validFilter(s: string, capture: boolean): boolean {
     );
   });
 }
-function validField(f: ParameterField, s: string): boolean {
+function validField(f: ParameterField, s: string, allowCidr = false): boolean {
   if (f.optional && s === "") return true;
   if (!s || !clean(s)) return false;
   switch (f.kind) {
     case "host":
-      return validHost(s, f.id === "host");
+      return validHost(s, allowCidr);
     case "url":
       return validUrl(s);
     case "ports":
@@ -181,9 +187,11 @@ export function buildParameterCommand(input: unknown): ParameterBuildResult {
     if (f.kind === "boolean") {
       if (typeof value !== "boolean") errors[f.id] = "Zvol platnou hodnotu ano/ne.";
       else values[f.id] = value;
-    } else if (typeof value !== "string" || !validField(f, value))
+    } else if (typeof value !== "string" || !validField(f, value, tool.id === "nmap"))
       errors[f.id] =
-        messages[f.kind] ??
+        (tool.id === "nmap" && f.kind === "host"
+          ? "Zadej platný hostname, jednotlivou IP nebo CIDR: IPv4 pouze /24–/32, IPv6 pouze /120–/128. Širší rozsahy nejsou povoleny."
+          : messages[f.kind]) ??
         `Vyplň platnou hodnotu: ${f.label}${f.kind === "number" ? ` (${f.min}–${f.max})` : ""}.`;
     else values[f.id] = value;
   }
