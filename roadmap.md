@@ -1,4 +1,5 @@
 # Kali command assistant
+- [x] Uložení scénářů PENTEST jako soukromých šablon, laboratorní formulář a bezpečný .sh export (skutečné uložení/načtení/stažení/smazání ověřeno, 300 testů; skripty nebyly spuštěny).
 - [x] Implement task 01: deterministic validated parameter generator for all ten tools; 155 Vitest tests pass, preview build OK, desktop/360px mobile and real AI coexistence verified. Full lint remains blocked by pre-existing formatting debt; new modules lint clean. Native bun test does not load Vitest/jsdom configuration; real iOS and installed Kali binaries unverified.
 - [x] Create Czech terminal-inspired command workspace without login or saved history.
 - [x] Connect Claude streaming and copyable Bash output.

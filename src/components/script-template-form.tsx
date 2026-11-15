@@ -13,6 +13,8 @@ import {
 import { downloadScript } from "@/lib/bash-script";
 import { parseScriptTemplate } from "@/lib/script-template-format";
 import { renderScriptTemplate, templateWarnings } from "@/lib/script-template-render";
+import { readPentestTemplate, renderPentestLab } from "@/lib/pentest-template";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Props = {
   open: boolean;
@@ -27,7 +29,14 @@ export function ScriptTemplateForm({ open, title, script, onClose, onCopy, onDow
   const parsed = useMemo(() => parseScriptTemplate(script), [script]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
-  const result = parsed.ok ? renderScriptTemplate(parsed.template, values, title) : null;
+  const [authorized, setAuthorized] = useState(false);
+  const pentest = script.includes("# kalicmd-pentest-scenario:");
+  const scenario = pentest ? readPentestTemplate(script) : null;
+  const result = pentest
+    ? renderPentestLab(script, title, values, authorized)
+    : parsed.ok
+      ? renderScriptTemplate(parsed.template, values, title)
+      : null;
   const warnings = parsed.ok ? templateWarnings(parsed.template) : [];
   return (
     <Dialog
@@ -64,7 +73,10 @@ export function ScriptTemplateForm({ open, title, script, onClose, onCopy, onDow
                       id={id}
                       className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground"
                       value={values[p.name] ?? p.defaultValue ?? ""}
-                      onChange={(e) => setValues((v) => ({ ...v, [p.name]: e.target.value }))}
+                      onChange={(e) => {
+                        setAuthorized(false);
+                        setValues((v) => ({ ...v, [p.name]: e.target.value }));
+                      }}
                     >
                       {!p.defaultValue && <option value="">— vyber —</option>}
                       {p.type.options.map((o) => (
@@ -80,7 +92,10 @@ export function ScriptTemplateForm({ open, title, script, onClose, onCopy, onDow
                       placeholder={p.defaultValue ?? ""}
                       aria-invalid={Boolean(err)}
                       aria-describedby={err ? `${id}-err` : undefined}
-                      onChange={(e) => setValues((v) => ({ ...v, [p.name]: e.target.value }))}
+                      onChange={(e) => {
+                        setAuthorized(false);
+                        setValues((v) => ({ ...v, [p.name]: e.target.value }));
+                      }}
                     />
                   )}
                   {err && (
@@ -91,6 +106,32 @@ export function ScriptTemplateForm({ open, title, script, onClose, onCopy, onDow
                 </div>
               );
             })}
+            {pentest && (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  .sh provede pouze omezenou TCP kontrolu Nmap. Příkazy AI jsou komentáře, nikoli
+                  spustitelné kroky.
+                </p>
+                <label className="flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={authorized}
+                    onCheckedChange={(v) => setAuthorized(v === true)}
+                  />
+                  Mám aktuální písemné oprávnění a potvrzený rozsah i časové okno pro tento
+                  laboratorní cíl.
+                </label>
+                {scenario && (
+                  <details>
+                    <summary className="cursor-pointer text-sm">Původní rozsah a omezení</summary>
+                    <p className="mt-2 break-words text-xs text-muted-foreground">
+                      {scenario.scope.inScope.join(", ")} · {scenario.constraints.rateLimit} · ROE:{" "}
+                      {scenario.authorization.reference} · {scenario.authorization.from} –{" "}
+                      {scenario.authorization.to}
+                    </p>
+                  </details>
+                )}
+              </>
+            )}
             <p className="flex items-start gap-2 text-xs text-muted-foreground">
               <ShieldCheck size={14} className="mt-0.5 shrink-0 text-primary" />
               Používej jen na vlastních nebo výslovně autorizovaných systémech. Skript se nespouští
