@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { useWebMCP } from "use-webmcp-tool";
 import { getCatalogTool, listCatalog } from "@/lib/catalog-output";
 import { runWebMCPTool } from "@/lib/webmcp-telemetry";
@@ -111,8 +112,10 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
     prompts.current[id] = text.trim();
     let answer = "";
     try {
+      const { data: auth } = await supabase.auth.getSession();
+      if (!auth.session) throw new Error("Pro použití AI se přihlas (tlačítko účtu nahoře).");
       const response = await fetch("/api/chat", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${auth.session.access_token}` },
         body: JSON.stringify({ mode, tool: tool?.id, messages: history.map(m => ({ role: m.role, content: m.parts.flatMap(p => p.type === "text" ? [p.text] : []).join("\n") })) }),
         signal: abort.signal,
       });
