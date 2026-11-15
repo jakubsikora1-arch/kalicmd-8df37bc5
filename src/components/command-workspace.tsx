@@ -261,6 +261,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
                   <div className="eyebrow"><span className="text-primary">$</span> PŘIROZENÝ JAZYK → BASH</div>
                   <h1>KaliCmd<span className="text-primary">_</span></h1>
                   <p className="welcome-description">Co dnes potřebuješ<br className="sm:hidden" /> dostat do terminálu?</p>
+                  <Button asChild variant="ghost" className="suggestion pentest-tile mt-6 w-full"><Link to="/pentest"><div className="suggestion-top"><ShieldCheck size={19} /><span>Metodický plán testu</span><ArrowUpRight size={16} /></div><span className="suggestion-title">PENTEST <ChevronRight size={16} /></span></Link></Button>
                   <h2 className="mt-6 text-sm font-semibold text-primary">{catalogTitle}</h2>
                   <div className="suggestions">
                     {tools.map(t => <Button asChild variant="ghost" key={t.name} className="suggestion"><Link to="/tools/$tool" params={{ tool: t.id }}><div className="suggestion-top"><t.icon size={19} /><span>{t.category}</span><ArrowUpRight size={16} /></div><span className="suggestion-title">{t.name} <ChevronRight size={16} /></span></Link></Button>)}

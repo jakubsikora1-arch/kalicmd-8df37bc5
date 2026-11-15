@@ -170,6 +170,7 @@
   .suggestion-top { @apply flex items-center gap-2 text-xs tracking-normal text-muted-foreground; }
   .suggestion-top svg:first-child { @apply text-primary; }
   .suggestion-top svg:last-child { @apply ml-auto; }
+  .pentest-tile { @apply border-primary/50 bg-primary/10; }
   .suggestion-title { @apply font-sans text-base font-bold text-foreground; }
   .suggestion-tool { @apply flex items-center gap-1 text-xs text-primary; }
   .welcome-terminal { @apply mt-6 w-full rounded-lg border border-border bg-card/80 p-4 text-left text-xs leading-6; }
