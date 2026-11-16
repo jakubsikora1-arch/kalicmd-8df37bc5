@@ -44,6 +44,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
   const [confirmation, setConfirmation] = useState<{ kind: "reset" } | { kind: "script"; item: SavedScript } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [composerActive, setComposerActive] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const mounted = useRef(false);
   const [savingFor, setSavingFor] = useState<string | null>(null);
@@ -92,8 +93,15 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
     void loadSaved();
   }, [ready, userId, loadSaved]);
 
+  const emptyInput = input.trim() === toolPrefix(tool).trim();
+  const composerHidden = !composerOpen && !composerActive && !busy && !error && emptyInput;
+  useEffect(() => {
+    if (composerOpen) textarea.current?.focus({ preventScroll: true });
+  }, [composerOpen]);
+
   function choose(text: string) {
     setInput(text);
+    setComposerOpen(true);
     textarea.current?.focus({ preventScroll: true });
   }
 
@@ -289,14 +297,15 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
           )}
           </div>
 
-          <div className="composer-area">
+          {composerHidden && <button type="button" className="composer-fab" aria-label="Otevřít zadání příkazu" title="Zadat příkaz" onClick={() => setComposerOpen(true)}><Terminal size={22} /></button>}
+          <div className={composerHidden ? "composer-area hidden" : "composer-area"}>
             <div role="group" aria-label="Režim generování" className="mb-3 flex w-fit gap-1 rounded-md border border-border bg-background p-1">
               <Button size="sm" variant={mode === "command" ? "secondary" : "ghost"} aria-pressed={mode === "command"} disabled={busy} onClick={() => setMode("command")}><Terminal />Příkaz</Button>
               <Button size="sm" variant={mode === "script" ? "secondary" : "ghost"} aria-pressed={mode === "script"} disabled={busy} onClick={() => setMode("script")}><FileCode2 />Skript .sh</Button>
             </div>
             {error && <div role="alert" className="error-notice">{error}</div>}
             <PromptInput className="command-composer" onSubmit={({ text }) => { void send(text); }}>
-              <PromptInputTextarea ref={textarea} value={input} onChange={e => setInput(scopedInput(e.target.value, tool))} onFocus={() => setComposerActive(true)} onBlur={() => setComposerActive(false)} className={composerActive || input.length > toolPrefix(tool).length ? "min-h-16 py-3" : "min-h-9 py-1.5"} placeholder={mode === "script" ? "Popiš, co má skript udělat…" : "Popiš, co chceš udělat…"} maxLength={8000} aria-label={mode === "script" ? "Zadání skriptu" : "Zadání příkazu"} />
+              <PromptInputTextarea ref={textarea} value={input} onChange={e => setInput(scopedInput(e.target.value, tool))} onFocus={() => setComposerActive(true)} onBlur={() => { setComposerActive(false); setComposerOpen(false); }} className={composerActive || input.length > toolPrefix(tool).length ? "min-h-16 py-3" : "min-h-9 py-1.5"} placeholder={mode === "script" ? "Popiš, co má skript udělat…" : "Popiš, co chceš udělat…"} maxLength={8000} aria-label={mode === "script" ? "Zadání skriptu" : "Zadání příkazu"} />
                <PromptInputFooter><div className="composer-language"><Terminal size={14} /> BASH <span>/</span> {tool ? tool.name : "KALI LINUX"}</div><PromptInputSubmit status={status} disabled={!busy && (!input.trim() || input.trim() === toolPrefix(tool).trim())} onStop={() => abortRef.current?.abort()} aria-label={busy ? "Zastavit odpověď" : mode === "script" ? "Vygenerovat skript" : "Vygenerovat příkaz"} /></PromptInputFooter>
             </PromptInput>
             <div className="composer-note"><ShieldCheck size={12} /><span>Příkazy před spuštěním ověř. Pouze pro autorizované testování.</span></div>

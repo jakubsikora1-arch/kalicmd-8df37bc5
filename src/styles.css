@@ -204,7 +204,9 @@
 .tool-commands { list-style: none; margin: 0; padding: 0; }
 .suggestion > * { flex-shrink: 0; }
 .confirmation-dialog { background-color: var(--background); }
-.app-header { padding-top: env(safe-area-inset-top); height: calc(4rem + env(safe-area-inset-top)); padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+.app-header { padding-top: calc(env(safe-area-inset-top) * 0.3); height: calc(3rem + env(safe-area-inset-top) * 0.7); padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+.composer-fab { position: absolute; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 20; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 999px; border: 1px solid var(--primary); background: var(--card); color: var(--primary); box-shadow: var(--glow); cursor: pointer; }
+.composer-fab:hover { background: var(--accent); }
 .workspace-bar { min-height: 52px; height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
 .workspace-bar > div { min-width: 0; }
 .welcome-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
