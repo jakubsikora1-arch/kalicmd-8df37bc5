@@ -1,4 +1,6 @@
 # Kali command assistant
+- [x] PENTEST: vlastní OpenAI klíč a ruční přepínání Claude/GPT; 311 testů, přihlášený přepínač i chyba ověřeny na desktopu/mobilu, build OK.
+- [ ] Ověřit úspěšné skutečné GPT generování; blokováno OpenAI odpovědí 429 (kvóta nebo limit požadavků účtu).
 - [x] Uložení scénářů PENTEST jako soukromých šablon, laboratorní formulář a bezpečný .sh export (skutečné uložení/načtení/stažení/smazání ověřeno, 300 testů; skripty nebyly spuštěny).
 - [x] Implement task 01: deterministic validated parameter generator for all ten tools; 155 Vitest tests pass, preview build OK, desktop/360px mobile and real AI coexistence verified. Full lint remains blocked by pre-existing formatting debt; new modules lint clean. Native bun test does not load Vitest/jsdom configuration; real iOS and installed Kali binaries unverified.
 - [x] Create Czech terminal-inspired command workspace without login or saved history.

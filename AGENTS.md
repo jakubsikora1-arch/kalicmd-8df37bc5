@@ -31,7 +31,7 @@ use the editor.
 
 ## Application architecture
 - Keep parameter definitions, schema validation/token assembly and React controls in separate browser-safe modules; use catalog IDs and never send parameter-generator inputs to AI or execute them.
-- Keep model calls in server routes via the shared ai-text-stream.server helper (Claude via AI Gateway first, OpenAI GPT via the same gateway as fallback on 429/5xx only); secrets must never enter browser bundles.
+- Keep general chat on ai-text-stream.server (Claude via AI Gateway, GPT gateway fallback on 429/5xx); PENTEST selects this Claude path or direct OpenAI via pentest-ai.server with OPENAI_API_KEY read only in the authenticated route, so explicit GPT calls never consume Lovable credits or switch providers on failure.
 - Keep conversation messages in React session state only; persist nothing unless the user explicitly saves it, because the app has no account and no history feature.
 - Signed-in users reach their saved scripts through owner-scoped RLS on the table; anonymous visitors cannot save or read scripts because a browser session id cannot prove ownership, so no visitor can read another's data.
 - Compose chat with installed AI Elements and keep visual tokens in the global stylesheet for consistency.
