@@ -21,7 +21,7 @@ export function ToolGuide({ tool, copied, onCopy }: { tool: Tool; copied: string
       </li>;
     })}</ol>
     <h2 className="mt-6 text-sm font-semibold text-primary">PŘÍKLAD</h2>
-    <p className="mt-2 text-xs text-muted-foreground">{tool.exampleType === "gui" ? "GUI — nikoli příkaz shellu" : tool.exampleType === "console" ? `Shell + konzole ${tool.name}` : "Shell"}</p>
+    <p className="mt-2 text-xs text-muted-foreground">{tool.exampleType === "gui" ? "GUI — nikoli příkaz shellu" : "Shell"}</p>
     <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-card p-3 text-xs leading-6 text-primary"><code>{tool.example}</code></pre>
     <p className="mt-2 text-xs leading-5 text-muted-foreground">{tool.exampleDescription}</p>
   </section>;
