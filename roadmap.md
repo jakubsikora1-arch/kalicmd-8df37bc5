@@ -1,4 +1,5 @@
 # Kali command assistant
+- [x] Rozšířit katalog na 20 nástrojů podle kali.org/tools; 332 testů, nové detaily ověřeny na mobilu (393 px), manifest agentů obnoven. Parametrický formulář zůstává jen pro původních 10.
 - [x] PENTEST: vlastní OpenAI klíč a ruční přepínání Claude/GPT; 311 testů, přihlášený přepínač i chyba ověřeny na desktopu/mobilu, build OK.
 - [ ] Ověřit úspěšné skutečné GPT generování; blokováno OpenAI odpovědí 429 (kvóta nebo limit požadavků účtu).
 - [x] Uložení scénářů PENTEST jako soukromých šablon, laboratorní formulář a bezpečný .sh export (skutečné uložení/načtení/stažení/smazání ověřeno, 300 testů; skripty nebyly spuštěny).

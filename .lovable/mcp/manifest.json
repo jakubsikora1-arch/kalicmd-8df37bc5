@@ -18,8 +18,8 @@
     "tools": [
       {
         "name": "list_kali_tools",
-        "title": "Katalog TOP 10",
-        "description": "Vypíše veřejný katalog deseti nástrojů Kali Linuxu s identifikátory a kategoriemi.",
+        "title": "Katalog TOP 20",
+        "description": "Vypíše veřejný katalog dvaceti nástrojů Kali Linuxu s identifikátory a kategoriemi.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -58,7 +58,17 @@
                 "hashcat",
                 "sqlmap",
                 "gobuster",
-                "nikto"
+                "nikto",
+                "hydra",
+                "reaver",
+                "bettercap",
+                "wpscan",
+                "wpprobe",
+                "arjun",
+                "dirbuster",
+                "dirb",
+                "sherlock",
+                "legion"
               ],
               "description": "Identifikátor nástroje z list_kali_tools."
             }

@@ -9,7 +9,7 @@ export default defineMcp({
   name: "kalicmd",
   title: "Kalicmd",
   version: "1.0.0",
-  instructions: "Český katalog (vyžaduje přihlášení účtem KaliCmd) TOP 10 nástrojů Kali Linuxu pro vlastní laboratorní systémy a autorizované testování. Rozlišujte shell, GUI a konzoli Metasploit. Nástroje pouze čtou katalog; nic nespouštějí, negenerují přes AI a nemají přístup k rozhovorům ani uloženým skriptům.",
+  instructions: "Český katalog (vyžaduje přihlášení účtem KaliCmd) TOP 20 nástrojů Kali Linuxu pro vlastní laboratorní systémy a autorizované testování. Rozlišujte shell, GUI a interaktivní konzole nástrojů. Nástroje pouze čtou katalog; nic nespouštějí, negenerují přes AI a nemají přístup k rozhovorům ani uloženým skriptům.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",

@@ -3,8 +3,8 @@ import { listCatalog } from "../../catalog-output";
 
 export default defineTool({
   name: "list_kali_tools",
-  title: "Katalog TOP 10",
-  description: "Vypíše veřejný katalog deseti nástrojů Kali Linuxu s identifikátory a kategoriemi.",
+  title: "Katalog TOP 20",
+  description: "Vypíše veřejný katalog dvaceti nástrojů Kali Linuxu s identifikátory a kategoriemi.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: () => {

@@ -68,7 +68,7 @@ const hashcatFormat = choice("format", "Typ hashe", [
 ]);
 
 // IDs reference the catalog; names, icons and categories never live here.
-export const toolParameterTemplates = {
+export const toolParameterTemplates: Partial<Record<ToolId, ParameterTemplate>> = {
   nmap: {
     actions: [
       {
@@ -236,10 +236,13 @@ export const toolParameterTemplates = {
       },
     ],
   },
-} satisfies Record<ToolId, ParameterTemplate>;
+};
 
 export function getParameterActions(tool: ToolId): readonly ParameterAction[] {
-  return toolParameterTemplates[tool].actions;
+  return toolParameterTemplates[tool]?.actions ?? [];
+}
+export function hasParameterTemplate(tool: ToolId): boolean {
+  return getParameterActions(tool).length > 0;
 }
 export function getParameterDefaults(
   tool: ToolId,

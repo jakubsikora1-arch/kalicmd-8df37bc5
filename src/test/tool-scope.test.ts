@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import { findTool, scopedInput, toolCatalog, toolPrefix } from "@/lib/tool-catalog";
 import { parseChatRequest } from "@/lib/chat-request";
 import { buildKaliPrompt } from "@/lib/kali-prompt";
+import { hasParameterTemplate } from "@/lib/tool-parameter-templates";
 
 describe("tool workspaces", () => {
-  it("contains exactly the requested ten tools in ranked order", () => {
-    expect(toolCatalog.map(tool => tool.id)).toEqual(["nmap", "wireshark", "metasploit", "burp", "aircrack-ng", "john", "hashcat", "sqlmap", "gobuster", "nikto"]);
-    expect(toolCatalog.map(tool => tool.rank)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  it("contains the original ten plus the ten requested Kali tools in ranked order", () => {
+    expect(toolCatalog.map(tool => tool.id)).toEqual(["nmap", "wireshark", "metasploit", "burp", "aircrack-ng", "john", "hashcat", "sqlmap", "gobuster", "nikto", "hydra", "reaver", "bettercap", "wpscan", "wpprobe", "arjun", "dirbuster", "dirb", "sherlock", "legion"]);
+    expect(toolCatalog.map(tool => tool.rank)).toEqual(Array.from({ length: 20 }, (_, index) => index + 1));
   });
   it.each(toolCatalog)("provides exactly five commands or functions for $name", tool => {
     expect(tool.commands).toHaveLength(5);
@@ -27,6 +28,9 @@ describe("tool workspaces", () => {
   it("supplies administrator permissions for monitor capture and process checks", () => {
     expect(findTool("aircrack-ng")?.commands[2]?.command).toBe("sudo airmon-ng check");
     expect(findTool("aircrack-ng")?.commands[3]?.command).toBe("sudo airodump-ng wlan0mon");
+  });
+  it("keeps parameter templates on the original ten tools only", () => {
+    expect(toolCatalog.filter(tool => hasParameterTemplate(tool.id)).map(tool => tool.id)).toEqual(["nmap", "wireshark", "metasploit", "burp", "aircrack-ng", "john", "hashcat", "sqlmap", "gobuster", "nikto"]);
   });
   it("keeps the general composer empty", () => expect(toolPrefix()).toBe(""));
   it("adds and preserves the selected tool marker", () => {

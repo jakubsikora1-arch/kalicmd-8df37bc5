@@ -14,6 +14,7 @@ import { findTool, toolCatalog, type ToolId } from "@/lib/tool-catalog";
 import {
   getParameterActions,
   getParameterDefaults,
+  hasParameterTemplate,
   parameterLevels,
   type ParameterLevel,
 } from "@/lib/tool-parameter-templates";
@@ -40,7 +41,7 @@ export function ParameterizedCommandGenerator({ initialTool }: { initialTool: To
   }
   function changeTool(next: string) {
     const selected = findTool(next);
-    if (!selected) return;
+    if (!selected || !hasParameterTemplate(selected.id)) return;
     setToolId(selected.id);
     setActionId(getParameterActions(selected.id)[0]?.id ?? "");
     setValues(getParameterDefaults(selected.id));
@@ -99,7 +100,7 @@ export function ParameterizedCommandGenerator({ initialTool }: { initialTool: To
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {toolCatalog.map((item) => (
+                {toolCatalog.filter((item) => hasParameterTemplate(item.id)).map((item) => (
                   <SelectItem key={item.id} value={item.id}>
                     {item.name}
                   </SelectItem>
