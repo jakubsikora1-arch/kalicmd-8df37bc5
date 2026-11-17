@@ -69,6 +69,8 @@ function validField(f: ParameterField, s: string, allowCidr = false): boolean {
       return /^(?:auxiliary|exploit|post|payload|encoder|nop|evasion)\/[a-zA-Z0-9_]+(?:\/[a-zA-Z0-9_]+)+$/.test(
         s,
       );
+    case "username":
+      return /^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,63}$/.test(s);
     case "parameter":
       return /^[a-zA-Z_][a-zA-Z0-9_]{0,63}$/.test(s);
     case "number":
@@ -85,6 +87,7 @@ const messages: Partial<Record<ParameterField["kind"], string>> = {
   ports: "Porty musí být 1–65535, např. 22,80,443 nebo 80-100.",
   interface: "Rozhraní smí obsahovat jen písmena, číslice a znaky _ . : - (max. 32 znaků).",
   path: "Použij cestu bez .., uvozovek a shell znaků; mezery uvnitř názvu jsou podporované.",
+  username: "Uživatelské jméno smí obsahovat jen písmena, číslice a znaky _ . - (max. 64).",
   "capture-filter":
     "Podporujeme tcp/udp/icmp/arp, [src/dst] port N a [src/dst] host IP; spojení and/or.",
   "display-filter":
@@ -143,6 +146,10 @@ export function buildParameterCommand(input: unknown): ParameterBuildResult {
     !new URL(String(values["url"])).searchParams.has(String(values["parameter"]))
   )
     errors["parameter"] = "Parametr musí skutečně existovat v query části zadané URL.";
+  if (values["min"] && values["max"] && Number(values["min"]) > Number(values["max"]))
+    errors["max"] = "Maximální délka musí být alespoň stejná jako minimální.";
+  if (values["out"] && (values["out"] === values["file"] || values["out"] === values["wordlist"]))
+    errors["out"] = "Výstupní soubor nesmí přepsat vstupní soubor.";
   if (Object.keys(errors).length) return { ok: false, errors };
   return { ok: true, output: assemble(tool.id, action.id, request.level, values) };
 }
@@ -392,7 +399,103 @@ function assemble(
         );
       break;
     }
+    case "hydra":
+      if (action === "docs") {
+        const lines = [`hydra -U ${quotePosix(s("service"))}`];
+        if (advanced) lines.push("hydra -h");
+        if (expert) lines.push("man hydra");
+        content = lines.join("\n");
+        explanation.push("-U zobrazí volby modulu služby; nepřipojuje se k žádnému cíli ani nezkouší hesla.");
+        if (advanced) explanation.push("hydra -h vypíše všechny obecné přepínače.");
+        if (expert) explanation.push("man hydra otevře úplný manuál.");
+      } else {
+        program = "pw-inspector";
+        add("-i", s("file"), "-o", s("out"), "-m", s("min"), "-M", s("max"));
+        if (advanced) add("-c", expert ? "3" : "2");
+        explanation.push("Pracuje jen s lokálními soubory: -i vstup, -o nový výstup, -m/-M délka hesla.");
+        if (advanced) explanation.push("-c vyžaduje minimální počet skupin znaků (malá, velká, číslice, speciální).");
+      }
+      break;
+    case "reaver":
+      program = "wash";
+      add("-f", s("file"));
+      if (advanced) add("-j");
+      if (expert) add("-a");
+      explanation.push("-f čte vlastní záznam místo živého rozhraní; nic nevysílá ani nezkouší PIN.");
+      if (advanced) explanation.push("-j vypíše rozšířené WPS informace jako JSON.");
+      if (expert) explanation.push("-a zahrne i přístupové body bez WPS.");
+      break;
+    case "bettercap": {
+      const lines = ["bettercap -version"];
+      if (advanced) lines.push("bettercap -h");
+      if (expert) lines.push("bettercap -h 2>&1 | grep -E -e '-iface|-caplet|-eval'");
+      content = lines.join("\n");
+      explanation.push("Pouze vypíše informace o spouštěči; neotevírá síťovou relaci ani nespouští moduly.");
+      if (expert) explanation.push("grep vyfiltruje z nápovědy volby pro rozhraní, caplety a eval.");
+      break;
+    }
+    case "wpscan":
+      program = "wpscan";
+      add("--url", s("url"), "--detection-mode", "passive", "--no-update", "--throttle", s("throttle"), "--request-timeout", s("seconds"));
+      if (advanced) add("--enumerate", expert ? "p,t" : "p", "--plugins-detection", "passive");
+      if (expert) add("--themes-detection", "passive");
+      explanation.push("Pasivní detekce stále posílá HTTP požadavky; --throttle je prodleva v ms, --no-update přeskočí aktualizaci databáze.");
+      if (advanced) explanation.push("--enumerate p (a t) pasivně vypíše oblíbené pluginy (a šablony).");
+      break;
+    case "wpprobe": {
+      const lines = [`wpprobe ${s("sub")} --help`];
+      if (advanced) lines.push("wpprobe --help");
+      if (expert) lines.push("wpprobe --version");
+      content = lines.join("\n");
+      explanation.push("Zobrazí pouze nápovědu; nezadává cíl ani nespouští sken.");
+      break;
+    }
+    case "arjun":
+      program = "arjun";
+      add("-u", s("url"), "-m", s("method"), "-w", s("wordlist"), "-t", s("threads"), "-d", s("delay"), "-oJ", s("out"));
+      if (advanced) add("--disable-redirects");
+      if (expert) add("--stable", "-T", "15");
+      explanation.push("-m metoda, -w vlastní slovník, -t vlákna a -d prodleva v sekundách; -oJ uloží JSON report.");
+      if (advanced) explanation.push("--disable-redirects nenásleduje přesměrování.");
+      if (expert) explanation.push("--stable upřednostní spolehlivost před rychlostí, -T 15 je časový limit požadavku.");
+      break;
+    case "dirbuster":
+      program = "dirbuster";
+      if (!advanced) add("-u", s("url"));
+      else add("-H", "-u", s("url"), "-l", s("wordlist"), "-t", "1", "-g", "-P", "-R");
+      if (expert) add("-r", s("out"));
+      explanation.push(advanced ? "-H bez GUI, -l slovník, -t 1 jedno vlákno, -g jen GET, -P bez parsování HTML, -R bez rekurze." : "Otevře GUI s předvyplněnou URL; sken nespustí. Slovník se použije od úrovně Pokročilý.");
+      if (expert) explanation.push("-r zapíše textový report.");
+      break;
+    case "dirb":
+      program = "dirb";
+      add(s("url"), s("wordlist"), "-r", "-S");
+      if (s("delay") !== "0") add("-z", s("delay"));
+      if (advanced) add("-N", "404");
+      if (expert) add("-o", s("out"));
+      explanation.push("-r vypne rekurzi, -S skryje výpis testovaných slov, -z je prodleva v ms (0 = bez prodlevy).");
+      if (advanced) explanation.push("-N 404 vyřadí odpovědi se stavem 404.");
+      if (expert) explanation.push("-o zapíše výsledky do souboru.");
+      break;
+    case "sherlock":
+      program = "sherlock";
+      add(s("username"));
+      if (s("site")) add("--site", s("site"));
+      add("--timeout", s("seconds"));
+      if (advanced) add("--print-found");
+      if (expert) add("--output", s("out"));
+      explanation.push("Kontaktuje veřejné služby; výsledek nepotvrzuje identitu. --timeout platí pro jednotlivý požadavek.");
+      if (expert) explanation.push("--output zapíše výsledky do souboru.");
+      break;
+    case "legion": {
+      const lines = ["legion --tool-audit"];
+      if (advanced) lines.push("legion -h");
+      if (expert) lines.push("legion -h 2>&1 | grep -i web");
+      content = lines.join("\n");
+      explanation.push("--tool-audit jen ověří dostupnost spolupracujících nástrojů; nic neinstaluje ani neskenuje.");
+      break;
+    }
   }
-  if (type === "shell") content = [program, ...args.map(quotePosix)].join(" ");
+  if (type === "shell" && !content) content = [program, ...args.map(quotePosix)].join(" ");
   return { type, content, explanation, warning };
 }

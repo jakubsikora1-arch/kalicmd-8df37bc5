@@ -19,6 +19,7 @@ export type ParameterKind =
   | "parameter"
   | "number"
   | "select"
+  | "username"
   | "boolean";
 export type ParameterField = {
   id: string;
@@ -66,6 +67,10 @@ const hashcatFormat = choice("format", "Typ hashe", [
   ["3200", "bcrypt (3200)"],
   ["1800", "SHA-512 crypt (1800)"],
 ]);
+
+const labUrl = (path = "") =>
+  field("url", "Autorizovaná URL v laboratoři", "url", `http://192.168.56.101${path}`);
+const labWordlist = field("wordlist", "Slovník", "path", "/usr/share/wordlists/dirb/common.txt");
 
 // IDs reference the catalog; names, icons and categories never live here.
 export const toolParameterTemplates: Partial<Record<ToolId, ParameterTemplate>> = {
@@ -235,6 +240,137 @@ export const toolParameterTemplates: Partial<Record<ToolId, ParameterTemplate>> 
         ],
       },
     ],
+  },
+  hydra: {
+    actions: [
+      {
+        id: "docs",
+        label: "Dokumentace modulu služby (bez připojení)",
+        fields: [
+          choice("service", "Služba", [
+            ["ssh", "SSH"],
+            ["ftp", "FTP"],
+            ["telnet", "Telnet"],
+            ["http-get", "HTTP GET"],
+            ["http-post-form", "HTTP POST formulář"],
+          ]),
+        ],
+      },
+      {
+        id: "filter",
+        label: "Filtrace vlastního slovníku (pw-inspector)",
+        fields: [
+          field("file", "Vstupní slovník", "path", "wordlist.txt"),
+          field("out", "Výstupní soubor", "path", "filtered.txt"),
+          limit("min", "Minimální délka hesla", 8, 1, 64),
+          limit("max", "Maximální délka hesla", 16, 1, 64),
+        ],
+      },
+    ],
+  },
+  reaver: {
+    actions: [
+      {
+        id: "read",
+        label: "Wash: offline rozbor vlastního záznamu",
+        fields: [field("file", "Vlastní PCAP soubor", "path", "capture.pcap")],
+      },
+    ],
+  },
+  bettercap: {
+    actions: [{ id: "info", label: "Verze a nápověda spouštěče", fields: [] }],
+  },
+  wpscan: {
+    actions: [
+      {
+        id: "passive",
+        label: "Pasivní detekce WordPressu",
+        fields: [
+          labUrl("/wordpress"),
+          limit("throttle", "Prodleva mezi požadavky (ms)", 1000, 100, 5000),
+          limit("seconds", "Časový limit požadavku (s)", 30, 5, 60),
+        ],
+      },
+    ],
+  },
+  wpprobe: {
+    actions: [
+      {
+        id: "help",
+        label: "Nápověda podřízeného příkazu",
+        fields: [
+          choice("sub", "Podřízený příkaz", [
+            ["scan", "scan"],
+            ["search", "search"],
+            ["list", "list"],
+          ]),
+        ],
+      },
+    ],
+  },
+  arjun: {
+    actions: [
+      {
+        id: "params",
+        label: "Hledání HTTP parametrů",
+        fields: [
+          labUrl("/search"),
+          choice("method", "Metoda", [
+            ["GET", "GET"],
+            ["POST", "POST"],
+            ["JSON", "JSON"],
+          ]),
+          field("wordlist", "Vlastní slovník parametrů", "path", "params.txt"),
+          limit("threads", "Počet vláken", 1, 1, 4),
+          limit("delay", "Prodleva (s)", 2, 1, 10),
+          field("out", "JSON report", "path", "arjun.json"),
+        ],
+      },
+    ],
+  },
+  dirbuster: {
+    actions: [
+      {
+        id: "launch",
+        label: "GUI s cílem / omezený headless průzkum",
+        fields: [
+          labUrl("/"),
+          labWordlist,
+          field("out", "Textový report (od úrovně Expert)", "path", "dirbuster.txt"),
+        ],
+      },
+    ],
+  },
+  dirb: {
+    actions: [
+      {
+        id: "scan",
+        label: "Nerekurzivní průzkum cest",
+        fields: [
+          labUrl("/"),
+          labWordlist,
+          limit("delay", "Prodleva mezi požadavky (ms)", 500, 0, 10000),
+          field("out", "Výstupní soubor (od úrovně Expert)", "path", "dirb.txt"),
+        ],
+      },
+    ],
+  },
+  sherlock: {
+    actions: [
+      {
+        id: "user",
+        label: "Kontrola vlastního uživatelského jména",
+        fields: [
+          field("username", "Vlastní uživatelské jméno", "username", "muj_lab_ucet"),
+          field("site", "Jedna služba", "term", "GitHub", { optional: true }),
+          limit("seconds", "Časový limit požadavku (s)", 10, 1, 60),
+          field("out", "Výstupní soubor (od úrovně Expert)", "path", "sherlock.txt"),
+        ],
+      },
+    ],
+  },
+  legion: {
+    actions: [{ id: "audit", label: "Kontrola dostupnosti nástrojů", fields: [] }],
   },
 };
 

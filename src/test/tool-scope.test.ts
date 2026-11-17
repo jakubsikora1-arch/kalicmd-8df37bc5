@@ -29,8 +29,8 @@ describe("tool workspaces", () => {
     expect(findTool("aircrack-ng")?.commands[2]?.command).toBe("sudo airmon-ng check");
     expect(findTool("aircrack-ng")?.commands[3]?.command).toBe("sudo airodump-ng wlan0mon");
   });
-  it("keeps parameter templates on the original ten tools only", () => {
-    expect(toolCatalog.filter(tool => hasParameterTemplate(tool.id)).map(tool => tool.id)).toEqual(["nmap", "wireshark", "metasploit", "burp", "aircrack-ng", "john", "hashcat", "sqlmap", "gobuster", "nikto"]);
+  it("provides a parameter template for every catalog tool", () => {
+    expect(toolCatalog.filter(tool => hasParameterTemplate(tool.id)).map(tool => tool.id)).toEqual(toolCatalog.map(tool => tool.id));
   });
   it("keeps the general composer empty", () => expect(toolPrefix()).toBe(""));
   it("adds and preserves the selected tool marker", () => {

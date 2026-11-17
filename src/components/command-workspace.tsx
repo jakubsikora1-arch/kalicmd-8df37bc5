@@ -15,6 +15,7 @@ import { catalogTitle, toolCatalog, toolPrefix, scopedInput, type Tool } from "@
 import { ToolGuide } from "@/components/tool-guide";
 import { ParameterizedCommandGenerator } from "@/components/parameterized-command-generator";
 import { hasParameterTemplate } from "@/lib/tool-parameter-templates";
+import { AiBriefForm } from "@/components/ai-brief-form";
 import logo from "@/assets/logo.png";
 import { ConfirmAction } from "@/components/confirm-action";
 import { ScriptDownload } from "@/components/script-download";
@@ -32,7 +33,8 @@ const tools = toolCatalog;
 export function CommandWorkspace({ tool }: { tool?: Tool }) {
   const [mode, setMode] = useState<GenerationMode>("command");
   const parametersAvailable = Boolean(tool && hasParameterTemplate(tool.id));
-  const [showParameters, setShowParameters] = useState(parametersAvailable);
+  const [view, setView] = useState<"parameters" | "brief" | "overview">(parametersAvailable ? "parameters" : tool ? "brief" : "overview");
+  const showParameters = view !== "overview";
   const [finishedScripts, setFinishedScripts] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState(toolPrefix(tool));
@@ -107,7 +109,8 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
     textarea.current?.focus({ preventScroll: true });
   }
 
-  async function send(text: string) {
+  async function send(text: string, modeOverride?: GenerationMode) {
+    const activeMode = modeOverride ?? mode;
     if (!text.trim() || text.trim() === toolPrefix(tool).trim() || busy) return;
     text = scopedInput(text, tool);
     const user: UIMessage = { id: crypto.randomUUID(), role: "user", parts: [{ type: "text", text: text.trim() }] };
@@ -126,7 +129,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
       if (!auth.session) throw new Error("Pro použití AI se přihlas (tlačítko účtu nahoře).");
       const response = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${auth.session.access_token}` },
-        body: JSON.stringify({ mode, tool: tool?.id, messages: history.map(m => ({ role: m.role, content: m.parts.flatMap(p => p.type === "text" ? [p.text] : []).join("\n") })) }),
+        body: JSON.stringify({ mode: activeMode, tool: tool?.id, messages: history.map(m => ({ role: m.role, content: m.parts.flatMap(p => p.type === "text" ? [p.text] : []).join("\n") })) }),
         signal: abort.signal,
       });
       if (!response.ok) throw new Error(await response.text() || "Odpověď se nepodařila. Zkuste to znovu.");
@@ -142,7 +145,7 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
         setMessages([...history, result]);
       }
       if (!answer) throw new Error("Claude nevrátil žádný text. Zkuste požadavek upravit.");
-      if (mode === "script" && !abort.signal.aborted && !answer.includes("_[Odpověď byla přerušena.]_")) {
+      if (activeMode === "script" && !abort.signal.aborted && !answer.includes("_[Odpověď byla přerušena.]_")) {
         const script = extractBashScript(answer);
         if (script) setFinishedScripts(previous => ({ ...previous, [id]: script }));
         else setError("Odpověď neobsahuje kompletní Bash skript ke stažení. Požádej o kratší úplný skript.");
@@ -261,8 +264,9 @@ export function CommandWorkspace({ tool }: { tool?: Tool }) {
             </section>
           )}
 
-          {tool && parametersAvailable && <div role="group" aria-label="Zobrazení nástroje" className="flex shrink-0 gap-2 border-b border-border px-4 py-2"><Button size="sm" variant={showParameters ? "secondary" : "ghost"} aria-pressed={showParameters} onClick={() => setShowParameters(true)}>Parametry</Button><Button size="sm" variant={!showParameters ? "secondary" : "ghost"} aria-pressed={!showParameters} onClick={() => setShowParameters(false)}>Přehled a AI{messages.length ? ` (${messages.length})` : ""}</Button></div>}
-          {tool && parametersAvailable && <div className={showParameters ? "welcome-scroll" : "hidden"}><div className="conversation-inner"><ParameterizedCommandGenerator initialTool={tool.id} /></div></div>}
+          {tool && <div role="group" aria-label="Zobrazení nástroje" className="flex shrink-0 gap-2 overflow-x-auto border-b border-border px-4 py-2">{parametersAvailable && <Button size="sm" variant={view === "parameters" ? "secondary" : "ghost"} aria-pressed={view === "parameters"} onClick={() => setView("parameters")}>Parametry</Button>}<Button size="sm" variant={view === "brief" ? "secondary" : "ghost"} aria-pressed={view === "brief"} onClick={() => setView("brief")}>Zadání pro AI</Button><Button size="sm" variant={view === "overview" ? "secondary" : "ghost"} aria-pressed={view === "overview"} onClick={() => setView("overview")}>Přehled a AI{messages.length ? ` (${messages.length})` : ""}</Button></div>}
+          {tool && parametersAvailable && <div className={view === "parameters" ? "welcome-scroll" : "hidden"}><div className="conversation-inner"><ParameterizedCommandGenerator initialTool={tool.id} /></div></div>}
+          {tool && <div className={view === "brief" ? "welcome-scroll" : "hidden"}><div className="conversation-inner"><AiBriefForm tool={tool} signedIn={Boolean(user)} busy={busy} onSubmit={(message, briefMode) => { setMode(briefMode); setView("overview"); void send(message, briefMode); }} /></div></div>}
           <div className={showParameters ? "hidden" : "flex min-h-0 flex-1 flex-col"}>
           {messages.length === 0 ? (
             <div className="welcome-scroll"><div className="conversation-inner">

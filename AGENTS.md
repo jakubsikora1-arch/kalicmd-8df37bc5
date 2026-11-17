@@ -30,7 +30,8 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Application architecture
-- Keep parameter definitions, schema validation/token assembly and React controls in separate browser-safe modules; use catalog IDs and never send parameter-generator inputs to AI or execute them.
+- Keep parameter definitions, schema validation/token assembly and React controls in separate browser-safe modules; use catalog IDs and never send deterministic parameter-generator inputs to AI or execute them.
+- The AI brief form (ai-brief.ts + ai-brief-form.tsx) is separate from the deterministic generator: it validates fields client-side and sends one structured text message through the normal chat endpoint, so server-side tool scoping and auth stay the single authority.
 - Keep general chat on ai-text-stream.server (Claude via AI Gateway, GPT gateway fallback on 429/5xx); PENTEST selects this Claude path or direct OpenAI via pentest-ai.server with OPENAI_API_KEY read only in the authenticated route, so explicit GPT calls never consume Lovable credits or switch providers on failure.
 - Keep conversation messages in React session state only; persist nothing unless the user explicitly saves it, because the app has no account and no history feature.
 - Signed-in users reach their saved scripts through owner-scoped RLS on the table; anonymous visitors cannot save or read scripts because a browser session id cannot prove ownership, so no visitor can read another's data.
@@ -39,7 +40,7 @@ use the editor.
 - Render the empty welcome outside the auto-scrolling conversation; reserve stick-to-bottom behavior for actual messages so mobile entry starts at the top.
 - Use the shared controlled confirmation dialog for irreversible actions; keep it open during deletion and on failure to prevent duplicate requests and preserve retry context.
 - Reuse CommandWorkspace across the main and dynamic tool routes, with catalog-validated tool IDs sent separately to the streaming endpoint; visible tool markers must not be the authority for AI scope.
-- Keep catalog ranks, controls, examples and shell/GUI/console kinds in the shared tool catalog so tool details and navigation use one content source; parameter templates are optional per catalog tool, so tools without a reviewed template show only details and AI.
+- Keep catalog ranks, controls, examples and shell/GUI/console kinds in the shared tool catalog so tool details and navigation use one content source; parameter templates exist per catalog tool and stay conservative (help, offline or rate-limited actions).
 - Expose only static catalog reads through SDK-generated MCP routes, protected by Supabase OAuth (consent page at /.lovable/oauth/consent) so only signed-in app users connect agents; use a JSON projection shared with page-local WebMCP reads to exclude icons, sessions, saved scripts and model calls.
 - Saved-script templates live as comment metadata inside the script (`# kalicmd-template: v1` header) and only standalone `NAME={{NAME}}` lines are replaced with validated, POSIX-quoted values; this avoids a DB migration and keeps legacy rows working, and templates are never executed.
 - /pentest uses its own prompt (pentest-prompt.ts) and sign-in-required /api/pentest; the server validates confirmed authorization, scope and per-phase gates before any AI call, and Markdown/JSON export is a pure client-side function with no DB writes, so the generic generator stays untouched.
